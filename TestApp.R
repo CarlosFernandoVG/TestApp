@@ -197,7 +197,7 @@ ui <- navbarPage(title = "TestApp",
                                 tags$link(rel="stylesheet", 
                                           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css")
                               ),
-                              HTML('<p style="text-align: center;>Report a bug or give me a review.</p>'),
+                              HTML('<p style="text-align: center;>Report a <a href="https://github.com/CarlosFernandoVG/TestApp/issues">bug</a> or give me a review.</p>'),
                               HTML('<p style="text-align: center;"><span style="color: #1665AE;">A work by <a href="https://github.com/CarlosFernandoVG" style="color: #1665AE">Carlos Vásquez</a></p>'),
                               HTML('<p style="text-align: center;"><span style="color: #1665AE;"><em>carlosfvasquez@ciencias.unam.mx</em></span></p>'),
                               HTML('<p style="text-align: center;"><a href="https://twitter.com/CarlosFVasquezG?lang=es" class="fab fa-twitter" style="color: #1665AE"></a>
