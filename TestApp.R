@@ -205,7 +205,7 @@ ui <- navbarPage(title = "TestApp",
                               hr(),
                               HTML('<a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank"><img alt="Licence Creative Commons" style="border-width:0"
         src="https://licensebuttons.net/l/by/4.0/80x15.png"/></a> This work of is made available under the terms of the <a rel="license"
-        href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative Commons Attribution-ShareAlike 4.0 International License</a>. Source code available on <a href="https://github.com/CarlosFernandoVG/RBookdown" target="_blank">GitHub</a>.')
+        href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative Commons Attribution-ShareAlike 4.0 International License</a>. Source code available on <a href="https://github.com/CarlosFernandoVG/TestApp" target="_blank">GitHub</a>.')
                             ),
                             #Panel principal------------------------------------------------------------------------
                             mainPanel(
