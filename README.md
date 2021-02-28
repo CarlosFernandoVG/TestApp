@@ -1,2 +1,2 @@
 # TestApp
- 
+Aplicación Web tipo Shiny para el aprendizaje de las pruebas paramétricas y no paramétricas más comunes, dirigido a los alumnos del curso Modelos no Paramétricos y de Regresión 2021-2, grupo 9227. Facultad de Ciencias, Universidad Nacional Autónoma de México o para cualquier otro usuario que desee hacer uso de esta herramienta.
