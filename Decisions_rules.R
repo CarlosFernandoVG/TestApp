@@ -33,9 +33,9 @@ ZTestHyp <- conditionalPanel(condition = "input.ParametricTest == 'Z-test'",
                              conditionalPanel(condition = "input.ZTestKind == '1 muestra'",
                                               conditionalPanel(condition = "input.ZTestKindOfTest1 == 'two.sided'",
                                                                align = "center",
-                                                               "$T\\leq t_1\\ \\o\\ T\\geq t_2$",
+                                                               "$T\\leq t_1\\ o\\ T\\geq t_2$",
                                                                "|",
-                                                               "$|T|\\geqt$"
+                                                               "$|T|\\geq t$"
                                               ),
                                               conditionalPanel(condition = "input.ZTestKindOfTest1 == 'less'",
                                                                align = "center",
@@ -47,9 +47,9 @@ ZTestHyp <- conditionalPanel(condition = "input.ParametricTest == 'Z-test'",
                              conditionalPanel(condition = "input.ZTestKind == '2 muestras'",
                                               conditionalPanel(condition = "input.ZTestKindOfTest2 == 'two.sided'",
                                                                align = "center",
-                                                               "$T\\leq t_1\\ \\o\\ T\\geq t_2$",
+                                                               "$T\\leq t_1\\ o\\ T\\geq t_2$",
                                                                "|",
-                                                               "$|T|>t$"
+                                                               "$|T|\\geq t$"
                                               ),
                                               conditionalPanel(condition = "input.ZTestKindOfTest2 == 'less'",
                                                                align = "center",

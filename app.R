@@ -19,7 +19,7 @@ ui <- navbarPage(title = "TestApp",
                           #Sidebar-----------------------------------------------------------------------------------
                           sidebarLayout(
                             sidebarPanel(
-                              style = "height:1000px;",
+                              style = "height:1100px;",
                               h4("Selecciona las mejores opciones para tu prueba"),
                               #Entrada de datos----------------------------------------------------------------------
                               fileInput("file", label = "Aquí puedes agregar tu archivo",  buttonLabel = "Selecciona tu archivo..."),
@@ -149,6 +149,19 @@ ui <- navbarPage(title = "TestApp",
                                              "¿Deseas aplicar una aproximación normal?",
                                              checkboxInput("BTPNormal", label = NULL, value = F)
                                            ),
+                                           # Cuantiles----------------------------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.BinomialTest == 'Cuantiles'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "CuantilTestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             ),
+                                             "¿Deseas aplicar una aproximación normal?",
+                                             checkboxInput("CuanTPNormal", label = NULL, value = F)
+                                           ),
                                            #Signos-------------------------------------------------------------------------
                                            conditionalPanel(
                                              condition = "input.BinomialTest == 'Signos'",
@@ -181,14 +194,31 @@ ui <- navbarPage(title = "TestApp",
                                                      selectInput(inputId = "BinomialTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
                                                    )
                                   ),
+                                  conditionalPanel(condition = "input.BinomialTest == 'Cuantiles'",
+                                                   conditionalPanel(
+                                                     condition = "input.CuantilTestInput == 'Manual'",
+                                                     numericInput(inputId = "CuantilTT1", label = "$T_1 = $ # de obs. $\\leq x^{*}$", value = NA, min = 0),
+                                                     numericInput(inputId = "CuantilTT2", label = "$T_2 = $ # de obs. $< x^{*}$", value = NA, min = 0),
+                                                     numericInput(inputId = "CuantilTN", label = "Tamaño de la muestra", value = NA, min = 0),
+                                                     numericInput(inputId = "CuantilTCuantilM", label = "Cuantil", value = NA, min = 0),
+                                                     selectInput(inputId = "CuantilTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.CuantilTestInput == 'Datos'",
+                                                     "Tus datos deben ser numéricos",
+                                                     uiOutput("CuantilTPvar"),
+                                                     numericInput(inputId = "CuantilTPX", label = "$x^{*}$", value = NA, min = 0),
+                                                     numericInput(inputId = "CuantilTCuantilD", label = "Cuantil", value = NA, min = 0),
+                                                     selectInput(inputId = "CuantilTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   )
+                                  ),
                                   conditionalPanel(condition = "input.BinomialTest == 'Signos'",
                                                    conditionalPanel(
                                                      condition = "input.SignosTestInput == 'Manual'",
                                                      numericInput(inputId = "SigTGreater", label = "# de casos: $X_i<Y_i$", value = NA, min = 0),
                                                      numericInput(inputId = "SigTLess", label = "# de casos: $X_i>Y_i$", value = NA, min = 0),
                                                      selectInput(inputId = "SignosTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                   )
-                                                   ,
+                                                   ),
                                                    conditionalPanel(
                                                      condition = "input.SignosTestInput == 'Datos'",
                                                      "Tus datos deben ser numéricos",
@@ -197,7 +227,6 @@ ui <- navbarPage(title = "TestApp",
                                                      selectInput(inputId = "SignosTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
                                                    )
                                   ),
-                                  conditionalPanel(condition = "input.BinomialTest == 'Cuantiles'"),
                                   conditionalPanel(condition = "input.BinomialTest == 'McNemar'"),
                                   conditionalPanel(condition = "input.BinomialTest == 'Cox Stuart'")
                                 ),
@@ -958,6 +987,15 @@ server <- function(input, output, session) {
       selectInput("BinomialTestVar_aux",label = "Selecciona tu variable",  choices = names(data()))
     }
   })
+  #Cuantiles
+  output$CuantilTPvar <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 1){
+      validate()
+    }else{
+      selectInput("CuantilTPvar_aux",label = "Selecciona tu variable",  choices = names(data()))
+    }
+  })
   #Signos
   output$SigTPvar_1 <- renderUI({
     req(input$file)
@@ -1128,7 +1166,77 @@ server <- function(input, output, session) {
           }
         }
       }
-      if(input$BinomialTest == "Cuantiles"){}
+      if(input$BinomialTest == "Cuantiles"){
+        validate(need(input$CuantilTestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$CuantilTestInput == "Datos"){
+          req(input$file)
+          var1 <- data()[[input$CuantilTPvar_aux]]
+          # #Prueba
+          Proves$test <- quantile.test(x = var1, xstar = input$CuantilTPX, quantile = input$CuantilTCuantilD, alternative = input$SignosTestKindOfTestD, conf.level = 1- input$alphaTest, correct = input$CuanTPNormal)
+          #Estadístico
+          Proves$statistical <- Proves$test$statistic
+          #P-value
+          Proves$p_value <- Proves$test$p.value
+          #Cuantil
+          if(input$CuanTPNormal){
+            n <- Proves$test$parameter
+            p <- Proves$test$null.value
+            t1 <- n*p+qnorm(p = alpha(input$CuantilTestKindOfTestD, alpha = input$alphaTest))*sqrt(n*p*(1-p))
+            t2 <- n*p+qnorm(p = 1-alpha(input$CuantilTestKindOfTestD, alpha = input$alphaTest))*sqrt(n*p*(1-p))
+            if(input$CuantilTestKindOfTestD == "two.sided"){
+              Proves$cuantil <- c(t1, t2)
+            }else{
+              if(input$CuantilTestKindOfTestD == "less"){
+                Proves$cuantil <- t1
+              }else{
+                Proves$cuantil <- t2
+              }
+            }
+          }else{
+            if(input$CuantilTestKindOfTestD == "two.sided"){
+              Proves$cuantil <- c(qbinom(p = alpha(input$CuantilTestKindOfTestD, alpha = input$alphaTest), size =  Proves$test$parameter, prob = Proves$test$null.value), qbinom(p = alpha(input$CuantilTestKindOfTestD, alpha = input$alphaTest), size =  Proves$test$parameter, prob = Proves$test$null.value, lower.tail = F))
+            }
+            else{
+              Proves$cuantil <- qbinom(p = input$alphaTest, size =  Proves$test$parameter, prob = Proves$test$null.value, lower.tail = (input$CuantilTestKindOfTestD == "less"))
+            }
+          }
+        }
+        if(input$CuantilTestInput == "Manual"){
+          validate(need(input$CuantilTT1 , "Ingresa los datos necesarios"))
+          validate(need(input$CuantilTT2 , "Ingresa los datos necesarios"))
+          validate(need(input$CuantilTN , "Ingresa el tamaño de la muestra"))
+          validate(need(input$CuantilTCuantilM , "Ingresa el cuantil al que deseas realizar la prueba"))
+          #Prueba
+          Proves$test <- quantile.test(x = input$CuantilTT1, y =input$CuantilTT2, n = input$CuantilTN,  quantile = input$CuantilTCuantilM, alternative = input$CuantilTestKindOfTestM, conf.level = 1- input$alphaTest, correct = input$CuanTPNormal)
+          #Estadístico
+          Proves$statistical <- Proves$test$statistic
+          #P-value
+          Proves$p_value <- Proves$test$p.value
+          #Cuantil
+          if(input$CuanTPNormal){
+            n <- Proves$test$parameter
+            p <- Proves$test$null.value
+            t1 <- n*p+qnorm(p = alpha(input$CuantilTestKindOfTestM, alpha = input$alphaTest))*sqrt(n*p*(1-p))
+            t2 <- n*p+qnorm(p = 1-alpha(input$CuantilTestKindOfTestM, alpha = input$alphaTest))*sqrt(n*p*(1-p))
+            if(input$CuantilTestKindOfTestM == "two.sided"){
+              Proves$cuantil <- c(t1, t2)
+            }else{
+              if(input$CuantilTestKindOfTestM == "less"){
+                Proves$cuantil <- t1
+              }else{
+                Proves$cuantil <- t2
+              }
+            }
+          }else{
+            if(input$CuantilTestKindOfTestM == "two.sided"){
+              Proves$cuantil <- c(qbinom(p = alpha(input$CuantilTestKindOfTestM, alpha = input$alphaTest), size =  Proves$test$parameter, prob = Proves$test$null.value), qbinom(p = alpha(input$CuantilTestKindOfTestM, alpha = input$alphaTest), size =  Proves$test$parameter, prob = Proves$test$null.value, lower.tail = F))
+            }
+            else{
+              Proves$cuantil <- qbinom(p = input$alphaTest, size =  Proves$test$parameter, prob = Proves$test$null.value, lower.tail = (input$CuantilTestKindOfTestM == "less"))
+            }
+          }
+        }
+      }
       if(input$BinomialTest == "Signos"){
         validate(need(input$SignosTestInput, "Selecciona que como deseas realizar tu prueba"))
         if(input$SignosTestInput == "Datos"){
