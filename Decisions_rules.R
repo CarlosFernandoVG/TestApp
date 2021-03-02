@@ -112,8 +112,57 @@ BinomialTestHyp <- conditionalPanel(condition = "input.NParametricTest == 'Binom
                                                                                        align = "center",
                                                                                        "$T\\geq t$")
                                                      )
-                                    )
-                                    ,
+                                    ),
+                                    conditionalPanel(condition = "input.BinomialTest == 'Cuantiles'",
+                                                     conditionalPanel(condition = "input.CuantilTestInput == 'Manual' & !input.CuanTPNormal",
+                                                                      conditionalPanel(condition = "input.CuantilTestKindOfTestM== 'two.sided'",
+                                                                                       align = "center",
+                                                                                       "$T_1\\leq t_1\\ o\\ T_2>t_2$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.CuantilTestKindOfTestM == 'less'",
+                                                                                       align = "center",
+                                                                                       "$T_1\\leq t_1$"),
+                                                                      conditionalPanel(condition = "input.CuantilTestKindOfTestM == 'greater'",
+                                                                                       align = "center",
+                                                                                       "$T_2> t_2$")
+                                                     ),
+                                                     conditionalPanel(condition = "input.CuantilTestInput == 'Manual' & input.CuanTPNormal",
+                                                                      conditionalPanel(condition = "input.CuantilTestKindOfTestM == 'two.sided'",
+                                                                                       align = "center",
+                                                                                       "$T_1\\leq t_1\\ o\\ T_2\\geq t_2$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.CuantilTestKindOfTestM == 'less'",
+                                                                                       align = "center",
+                                                                                       "$T_1\\leq t_1$"),
+                                                                      conditionalPanel(condition = "input.CuantilTestKindOfTestM == 'greater'",
+                                                                                       align = "center",
+                                                                                       "$T_2\\geq t_2$")
+                                                     ),
+                                                     conditionalPanel(condition = "input.CuantilTestInput == 'Datos' & !input.CuanTPNormal",
+                                                                      conditionalPanel(condition = "input.CuantilTestKindOfTestD == 'two.sided'",
+                                                                                       align = "center",
+                                                                                       "$T_1\\leq t_1\\ o\\ T_2>t_2$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.CuantilTestKindOfTestD == 'less'",
+                                                                                       align = "center",
+                                                                                       "$T_1\\leq t_1$"),
+                                                                      conditionalPanel(condition = "input.CuantilTestKindOfTestD == 'greater'",
+                                                                                       align = "center",
+                                                                                       "$T_2> t_2$")
+                                                     ),
+                                                     conditionalPanel(condition = "input.CuantilTestInput == 'Datos' & input.CuanTPNormal",
+                                                                      conditionalPanel(condition = "input.CuantilTestKindOfTestD == 'two.sided'",
+                                                                                       align = "center",
+                                                                                       "$T_1\\leq t_1\\ o\\ T_2\\geq t_2$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.CuantilTestKindOfTestD == 'less'",
+                                                                                       align = "center",
+                                                                                       "$T_1\\leq t_1$"),
+                                                                      conditionalPanel(condition = "input.CuantilTestKindOfTestD == 'greater'",
+                                                                                       align = "center",
+                                                                                       "$T_2\\geq t_2$")
+                                                     )
+                                    ),
                                     conditionalPanel(condition = "input.BinomialTest == 'Signos'",
                                                      conditionalPanel(condition = "input.SignosTestInput == 'Manual' & !input.BTPNormal",
                                                                       conditionalPanel(condition = "input.SignosTestKindOfTestM == 'two.sided'",

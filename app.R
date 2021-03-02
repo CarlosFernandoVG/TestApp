@@ -411,7 +411,13 @@ ui <- navbarPage(title = "TestApp",
 server <- function(input, output, session) {
   Proves <- reactiveValues(test = NULL, statistical = NULL, p_value = NULL, cuantil = NULL)
   #Datos rápidos-------------------------------------------------------------------------------------------------------
-  output$Statistical <- renderText(Proves$statistical)
+  output$Statistical <- renderText({
+    if(length(Proves$statistical)  == 2){
+      paste(Proves$statistical[1], ", ", Proves$statistical[2])
+    }else{
+      Proves$statistical
+    }
+  })
   output$P_value <- renderText(Proves$p_value)
   output$Quantil <- renderText({
     if(length(Proves$cuantil)  == 2){
@@ -725,6 +731,94 @@ server <- function(input, output, session) {
               #Diseño
               scale_colour_manual(values = c("#386df2", "black")) +
               ggtitle(TeX(paste("$Binomial(", Proves$test$parameter,", ", input$BTpD, ")$"))) +
+              general_theme + 
+              guides(colour = guide_legend(label.position = "left", title = NULL)) +
+              labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") 
+          }
+        }
+      }
+      if(input$BinomialTest == 'Cuantiles'){
+        validate(need(input$CuantilTestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$CuantilTestInput == 'Manual'){
+          validate(need(input$CuantilTT1 , "Ingresa los datos necesarios"))
+          validate(need(input$CuantilTT2 , "Ingresa los datos necesarios"))
+          validate(need(input$CuantilTN , "Ingresa el tamaño de la muestra"))
+          validate(need(input$CuantilTCuantilM , "Ingresa el cuantil al que deseas realizar la prueba"))
+          if(input$CuanTPNormal){
+            plotis_NP$plot <- data_frame(x = c(input$RangoX1NP,input$RangoX2NP)) %>% 
+              ggplot(aes(x = x)) + 
+              guides(colour = guide_legend(label.position = "left", title = NULL)) +
+              labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") + 
+              general_theme +
+              stat_function(fun = ~dnorm(.x)) +
+              ggtitle(TeX(paste("$N(0,1)$"))) +
+              geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dnorm(Proves$statistical), colour = "Estadístico: ")) +
+              geom_segment(aes(x = Proves$cuantil, xend = Proves$cuantil, y = 0, yend = dnorm(Proves$cuantil), colour = "Cuantíl: ")) +
+              stat_function(color = NA, fun= ~under_curve(type = input$CuantilTestKindOfTestM, alpha = input$alphaTest, x = .x, fun = dnorm, fq = qnorm),
+                            geom = 'area', fill = '#13378f', alpha = 0.2)+
+              scale_colour_manual(values = c("#386df2", "black"))
+            
+          }else{
+            binom_reject <- reject_zone_discrete(type = input$CuantilTestKindOfTestM, n = Proves$test$parameter, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+            data <- tibble(x = seq(0, Proves$test$parameter)[!(seq(0, Proves$test$parameter) %in% binom_reject$x)], y = dbinom(x = x, size = Proves$test$parameter, prob = 0.5))
+            binom_stat <- tibble(x = Proves$statistical, y = dbinom(x, size = Proves$test$parameter, prob = 0.5))
+            binom_cuantil <- cuantil_assing(type = input$CuantilTestKindOfTestM, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+            
+            plotis_NP$plot <- data %>% ggplot(aes(x = x, y = y)) + 
+              geom_segment(aes(xend=x, yend=0), color = "grey53") +
+              geom_point(color = "grey53") +
+              #Región de rechazo
+              geom_segment(data = binom_reject, aes(xend = x, yend = 0),  color = '#13378f', alpha = 0.4) +
+              geom_point(data = binom_reject, color = '#13378f', alpha = 0.4) + 
+              #Estadístico
+              geom_segment(data = binom_stat, aes(xend  = x, yend = 0, colour = "Estadístico: ")) + 
+              geom_point(data = binom_stat, aes(colour = "Estadístico: ")) +
+              #Cuantiles
+              geom_segment(data = binom_cuantil, aes(xend = x, yend = 0, colour = "Cuantíl: ")) + 
+              geom_point(data = binom_cuantil, aes(colour = "Cuantíl: ")) + 
+              #Diseño
+              scale_colour_manual(values = c("#386df2", "black")) +
+              ggtitle(TeX(paste("$Binomial(", Proves$test$parameter,", ", 0.5, ")$"))) +
+              general_theme + 
+              guides(colour = guide_legend(label.position = "left", title = NULL)) +
+              labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") 
+          }
+        }else{
+          req(input$file)
+          if(input$CuanTPNormal){
+            plotis_NP$plot <- data_frame(x = c(input$RangoX1NP,input$RangoX2NP)) %>% 
+              ggplot(aes(x = x)) + 
+              guides(colour = guide_legend(label.position = "left", title = NULL)) +
+              labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") + 
+              general_theme +
+              stat_function(fun = ~dnorm(.x)) + 
+              ggtitle(TeX(paste("$N(0,1)$"))) + 
+              geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dnorm(Proves$statistical), colour = "Estadístico: ")) + 
+              geom_segment(aes(x = Proves$cuantil, xend = Proves$cuantil, y = 0, yend = dnorm(Proves$cuantil), colour = "Cuantíl: ")) +
+              stat_function(color = NA, fun= ~under_curve(type = input$CuantilTestKindOfTestD, alpha = input$alphaTest, x = .x, fun = dnorm, fq = qnorm), 
+                            geom = 'area', fill = '#13378f', alpha = 0.2)+
+              scale_colour_manual(values = c("#386df2", "black"))
+          }else{
+            binom_reject <- reject_zone_discrete(type = input$CuantilTestKindOfTestD, n = Proves$test$parameter, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+            data <- tibble(x = seq(0, Proves$test$parameter)[!(seq(0, Proves$test$parameter) %in% binom_reject$x)], y = dbinom(x = x, size = Proves$test$parameter, prob = 0.5))
+            binom_stat <- tibble(x = Proves$statistical, y = dbinom(x, size = Proves$test$parameter, prob = 0.5))
+            binom_cuantil <- cuantil_assing(type = input$CuantilTestKindOfTestD, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+            
+            plotis_NP$plot <- data %>% ggplot(aes(x = x, y = y)) + 
+              geom_segment(aes(xend=x, yend=0), color = "grey53") +
+              geom_point(color = "grey53") +
+              #Región de rechazo
+              geom_segment(data = binom_reject, aes(xend = x, yend = 0),  color = '#13378f', alpha = 0.4) +
+              geom_point(data = binom_reject, color = '#13378f', alpha = 0.4) + 
+              #Estadístico
+              geom_segment(data = binom_stat, aes(xend  = x, yend = 0, colour = "Estadístico: ")) + 
+              geom_point(data = binom_stat, aes(colour = "Estadístico: ")) +
+              #Cuantiles
+              geom_segment(data = binom_cuantil, aes(xend = x, yend = 0, colour = "Cuantíl: ")) + 
+              geom_point(data = binom_cuantil, aes(colour = "Cuantíl: ")) + 
+              #Diseño
+              scale_colour_manual(values = c("#386df2", "black")) +
+              ggtitle(TeX(paste("$Binomial(", Proves$test$parameter,", ", 0.5, ")$"))) +
               general_theme + 
               guides(colour = guide_legend(label.position = "left", title = NULL)) +
               labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") 
