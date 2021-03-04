@@ -1,33 +1,33 @@
 #TTest-------------------------------------------------------------------------------------------------------
 TTestHyp <- conditionalPanel(condition = "input.ParametricTest == 'T-test'",
-                 conditionalPanel(condition = "input.TTestKind == '1 muestra'",
-                                  conditionalPanel(condition = "input.TTestKindOfTest1 == 'two.sided'",
-                                                   align = "center",
-                                                   "$T\\leq t_1\\ o\\ T\\geq t_2$",
-                                                   "|",
-                                                   "$|T|\\geq t$"
-                                  ),
-                                  conditionalPanel(condition = "input.TTestKindOfTest1 == 'less'",
-                                                   align = "center",
-                                                   "$T\\leq t$"),
-                                  conditionalPanel(condition = "input.TTestKindOfTest1 == 'greater'",
-                                                   align = "center",
-                                                   "$T\\geq t$")
-                 ),
-                 conditionalPanel(condition = "input.TTestKind == '2 muestras'",
-                                  conditionalPanel(condition = "input.TTestKindOfTest2 == 'two.sided'",
-                                                   align = "center",
-                                                   "$T\\leq t_1\\ o\\ T\\geq t_2$",
-                                                   "|",
-                                                   "$|T|\\geq t$"
-                                  ),
-                                  conditionalPanel(condition = "input.TTestKindOfTest2 == 'less'",
-                                                   align = "center",
-                                                   "$T\\leq t$"),
-                                  conditionalPanel(condition = "input.TTestKindOfTest2 == 'greater'",
-                                                   align = "center",
-                                                   "$T\\geq t$")
-                 ))
+                             conditionalPanel(condition = "input.TTestKind == '1 muestra'",
+                                              conditionalPanel(condition = "input.TTestKindOfTest1 == 'two.sided'",
+                                                               align = "center",
+                                                               "$T\\leq t_1\\ o\\ T\\geq t_2$",
+                                                               "|",
+                                                               "$|T|\\geq t$"
+                                              ),
+                                              conditionalPanel(condition = "input.TTestKindOfTest1 == 'less'",
+                                                               align = "center",
+                                                               "$T\\leq t$"),
+                                              conditionalPanel(condition = "input.TTestKindOfTest1 == 'greater'",
+                                                               align = "center",
+                                                               "$T\\geq t$")
+                             ),
+                             conditionalPanel(condition = "input.TTestKind == '2 muestras'",
+                                              conditionalPanel(condition = "input.TTestKindOfTest2 == 'two.sided'",
+                                                               align = "center",
+                                                               "$T\\leq t_1\\ o\\ T\\geq t_2$",
+                                                               "|",
+                                                               "$|T|\\geq t$"
+                                              ),
+                                              conditionalPanel(condition = "input.TTestKindOfTest2 == 'less'",
+                                                               align = "center",
+                                                               "$T\\leq t$"),
+                                              conditionalPanel(condition = "input.TTestKindOfTest2 == 'greater'",
+                                                               align = "center",
+                                                               "$T\\geq t$")
+                             ))
 #ZTest-------------------------------------------------------------------------------------------------------
 ZTestHyp <- conditionalPanel(condition = "input.ParametricTest == 'Z-test'",
                              conditionalPanel(condition = "input.ZTestKind == '1 muestra'",
@@ -60,7 +60,7 @@ ZTestHyp <- conditionalPanel(condition = "input.ParametricTest == 'Z-test'",
                              ))
 #ShapiroTest-------------------------------------------------------------------------------------------------------
 ShapiroTestHyp <- conditionalPanel(condition = "input.ParametricTest == 'Shapiro-Wilks'",
-                                                               "$T<t$")
+                                   "$T<t$")
 #BinomialTest-------------------------------------------------------------------------------------------------------
 BinomialTestHyp <- conditionalPanel(condition = "input.NParametricTest == 'Binomial'",
                                     conditionalPanel(condition = "input.BinomialTest == 'Proporciones'",
@@ -212,6 +212,38 @@ BinomialTestHyp <- conditionalPanel(condition = "input.NParametricTest == 'Binom
                                                                                        align = "center",
                                                                                        "$T\\geq t$")
                                                      )
+                                    ),
+                                    conditionalPanel(condition = "input.BinomialTest == 'McNemar'",
+                                                     conditionalPanel(condition = "input.MCNemarTestInput == 'Manual'",
+                                                                      conditionalPanel(condition = "input.MCNemarTPCorrection & input.MCNCorrection == 'MCNCorrectionCont'",
+                                                                                       align = "center",
+                                                                                       "$T> t_{1-\\alpha}$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.MCNemarTPCorrection & input.MCNCorrection == 'MCNCorrectionExact'",
+                                                                                       align = "center",
+                                                                                       "$T\\leq t$ o $T<n-t$"),
+                                                                      conditionalPanel(condition = "input.MCNemarTPCorrection & input.MCNCorrection == 'MCNCorrectionBinom'",
+                                                                                       align = "center",
+                                                                                       "$T\\leq t$ o $T<n-t$"),
+                                                                      conditionalPanel(condition = "!input.MCNemarTPCorrection",
+                                                                                       align = "center",
+                                                                                       "$T> t_{1-\\alpha}$")
+                                                     ),
+                                                     conditionalPanel(condition = "input.MCNemarTestInput == 'Datos'",
+                                                                      conditionalPanel(condition = "input.MCNemarTPCorrection & input.MCNCorrection == 'MCNCorrectionCont'",
+                                                                                       align = "center",
+                                                                                       "$T> t_{1-\\alpha}$"),
+                                                                      conditionalPanel(condition = "input.MCNemarTPCorrection & input.MCNCorrection == 'MCNCorrectionExact'",
+                                                                                       align = "center",
+                                                                                       "$T\\leq t$ o $T<n-t$"),
+                                                                      conditionalPanel(condition = "input.MCNemarTPCorrection & input.MCNCorrection == 'MCNCorrectionBinom'",
+                                                                                       align = "center",
+                                                                                       "$T\\leq t$ o $T<n-t$"),
+                                                                      conditionalPanel(condition = "!input.MCNemarTPCorrection",
+                                                                                       align = "center",
+                                                                                       "$T> t_{1-\\alpha}$")
+                                                     )
+                                                     
                                     )
 )
 #Attempts----------------------------------------------------------------------------------------------------

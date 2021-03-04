@@ -5,10 +5,15 @@ library(DT)
 library(latex2exp)
 library(shinyWidgets)
 library(BSDA) #Para pruebas Z
+library(exact2x2)# Pruebas McNemar
+library(shinyMatrix)
 source("functions.R")
 source("Decisions_rules.R")
 source("DescriptionsTests.R")
 library(ggpubr)
+
+#Algunos objetos iniciales
+mMcNemar <- matrix(rep(NA,4), 2, 2, dimnames = list(c("Antes 0", "Antes 1"), c("Después 0", "Después 1")))
 #ui-----------------------------------------------------------------------------------------------------------
 ui <- navbarPage(title = "TestApp", 
                  theme = "styles.css",
@@ -19,7 +24,7 @@ ui <- navbarPage(title = "TestApp",
                           #Sidebar-----------------------------------------------------------------------------------
                           sidebarLayout(
                             sidebarPanel(
-                              style = "height:1100px;",
+                              style = "height:1200px;",
                               h4("Selecciona las mejores opciones para tu prueba"),
                               #Entrada de datos----------------------------------------------------------------------
                               fileInput("file", label = "Aquí puedes agregar tu archivo",  buttonLabel = "Selecciona tu archivo..."),
@@ -174,6 +179,22 @@ ui <- navbarPage(title = "TestApp",
                                              ),
                                              "¿Deseas aplicar una aproximación normal?",
                                              checkboxInput("SigTPNormal", label = NULL, value = F)
+                                           ),
+                                           #McNemar------------------------------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.BinomialTest == 'McNemar'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "MCNemarTestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             ),
+                                             checkboxInput("MCNemarTPCorrection", label = "¿Deseas aplicar alguna correción?", value = F),
+                                             conditionalPanel(condition = "input.MCNemarTPCorrection",
+                                                              radioButtons("MCNCorrection", label = NULL,
+                                                                           choices = list("Corrección de continuidad" = "MCNCorrectionCont", "exact2X2::mcnemar.exact()" = "MCNCorrectionExact", "exactci::binom.exact()" = "MCNCorrectionBinom"))
+                                             )
                                            )
                                     )
                                   ),
@@ -227,7 +248,32 @@ ui <- navbarPage(title = "TestApp",
                                                      selectInput(inputId = "SignosTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
                                                    )
                                   ),
-                                  conditionalPanel(condition = "input.BinomialTest == 'McNemar'"),
+                                  conditionalPanel(condition = "input.BinomialTest == 'McNemar'",
+                                                   conditionalPanel(condition = "input.MCNemarTestInput == 'Manual'",
+                                                                    matrixInput("McNemarInputMatrix", value = mMcNemar,
+                                                                                rows = list(
+                                                                                  # extend = TRUE,
+                                                                                  names = TRUE),
+                                                                                class = "numeric",
+                                                                                cols = list(names = TRUE))
+                                                   ),
+                                                   conditionalPanel(condition = "input.MCNemarTestInput == 'Datos'",
+                                                                    #Podríamos agregar una opción para seleccionar los factores
+                                                                    "Selecciona las variables que desees utilizar para crear la matriz de contingencia.",
+                                                                    "Recuerda que los datos deben ser nominales con las mismas 2 categorías en cada variable, por lo que si ingresas valores numéricos, se tomarán como factores de a lo más dos niveles.",
+                                                                    uiOutput("McNemarTPvar_1"),
+                                                                    uiOutput("McNemarTPvar_2"),
+                                                                    "Verifica que tus datos formen correctamente una matriz de contingencia apropiada. Si no se actualiza la matriz, revisa tus datos.",
+                                                                    "",
+                                                                    actionButton("CheckDataMcNemar", "Checar datos"),
+                                                                    matrixInput("McNemarMatrixDatos", value = matrix(rep(NA,4), 2, 2, dimnames = list(c("Antes 0", "Antes 1"), c("Después 0", "Después 1"))),
+                                                                                rows = list(
+                                                                                  # extend = TRUE,
+                                                                                  names = TRUE),
+                                                                                class = "numeric",
+                                                                                cols = list(names = TRUE))
+                                                   )
+                                  ),
                                   conditionalPanel(condition = "input.BinomialTest == 'Cox Stuart'")
                                 ),
                                 #Pruebas de Rango-------------------------------------------------------------------
@@ -738,7 +784,7 @@ server <- function(input, output, session) {
         }
       }
       if(input$BinomialTest == 'Cuantiles'){
-        validate(need(input$CuantilTestInput, "Selecciona que como deseas realizar tu prueba"))
+        validate(need(input$CuantilTestInput, ""))
         if(input$CuantilTestInput == 'Manual'){
           validate(need(input$CuantilTT1 , "Ingresa los datos necesarios"))
           validate(need(input$CuantilTT2 , "Ingresa los datos necesarios"))
@@ -826,7 +872,7 @@ server <- function(input, output, session) {
         }
       }
       if(input$BinomialTest == 'Signos'){
-        validate(need(input$SignosTestInput, "Selecciona que como deseas realizar tu prueba"))
+        validate(need(input$SignosTestInput, ""))
         if(input$SignosTestInput == 'Manual'){
           validate(need(input$SigTGreater , "Ingresa la información necesaria"))
           validate(need(input$SigTLess , "Ingresa la información necesaria"))
@@ -953,6 +999,153 @@ server <- function(input, output, session) {
               general_theme + 
               guides(colour = guide_legend(label.position = "left", title = NULL)) +
               labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") 
+          }
+        }
+      }
+      if(input$BinomialTest == "McNemar"){
+        validate(need(input$MCNemarTestInput, ""))
+        if(input$MCNemarTestInput == "Manual"){
+          validate(verify_matrix(input$McNemarInputMatrix))
+          if(input$MCNemarTPCorrection){
+            if(input$MCNCorrection == "MCNCorrectionCont"){
+              plotis_NP$plot <-data_frame(x = c(0,input$RangoX2NP)) %>% 
+                ggplot(aes(x = x)) + 
+                guides(colour = guide_legend(label.position = "left", title = NULL)) +
+                labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") + 
+                general_theme +
+                stat_function(fun = ~dchisq(.x, df = 1)) +
+                ggtitle(TeX(paste("$\\chi_{1}$"))) +
+                geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0,
+                                 yend = dchisq(x = Proves$statistical, df = 1),
+                                 colour = "Estadístico: ")) +
+                geom_segment(aes(x = Proves$cuantil, xend = Proves$cuantil, y = 0,
+                                 yend = dchisq(x = Proves$cuantil, df = 1),
+                                 colour = "Cuantíl: ")) +
+                stat_function(color = NA, fun= ~under_curve(type = "greater",
+                                                            alpha = input$alphaTest, x = .x,
+                                                            fun = dchisq, fq = qchisq,
+                                                            df = 1),
+                              geom = 'area', fill = '#13378f', alpha = 0.2)+
+                scale_colour_manual(values = c("#386df2", "black"))
+            }
+            if(input$MCNCorrection %in% c("MCNCorrectionExact", "MCNCorrectionBinom")){
+              binom_reject <- reject_zone_discrete(type = "two.sided", n = Proves$test$parameter, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+              data <- tibble(x = seq(0, Proves$test$parameter)[!(seq(0, Proves$test$parameter) %in% binom_reject$x)], y = dbinom(x = x, size = Proves$test$parameter, prob = 0.5))
+              binom_stat <- tibble(x = Proves$statistical, y = dbinom(x, size = Proves$test$parameter, prob = 0.5))
+              binom_cuantil <- cuantil_assing(type = "two.sided", alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+              
+              plotis_NP$plot <- data %>% ggplot(aes(x = x, y = y)) + 
+                geom_segment(aes(xend=x, yend=0), color = "grey53") +
+                geom_point(color = "grey53") +
+                #Región de rechazo
+                geom_segment(data = binom_reject, aes(xend = x, yend = 0),  color = '#13378f', alpha = 0.4) +
+                geom_point(data = binom_reject, color = '#13378f', alpha = 0.4) + 
+                #Estadístico
+                geom_segment(data = binom_stat, aes(xend  = x, yend = 0, colour = "Estadístico: ")) + 
+                geom_point(data = binom_stat, aes(colour = "Estadístico: ")) +
+                #Cuantiles
+                geom_segment(data = binom_cuantil, aes(xend = x, yend = 0, colour = "Cuantíl: ")) + 
+                geom_point(data = binom_cuantil, aes(colour = "Cuantíl: ")) + 
+                #Diseño
+                scale_colour_manual(values = c("#386df2", "black")) +
+                ggtitle(TeX(paste("$Binomial(", Proves$test$parameter,", ", 0.5, ")$"))) +
+                general_theme + 
+                guides(colour = guide_legend(label.position = "left", title = NULL)) +
+                labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") 
+            }
+          }else{
+            plotis_NP$plot <-data_frame(x = c(0,input$RangoX2NP)) %>% 
+              ggplot(aes(x = x)) + 
+              guides(colour = guide_legend(label.position = "left", title = NULL)) +
+              labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") + 
+              general_theme +
+              stat_function(fun = ~dchisq(.x, df = 1)) +
+              ggtitle(TeX(paste("$\\chi_{1}$"))) +
+              geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0,
+                               yend = dchisq(x = Proves$statistical, df = 1),
+                               colour = "Estadístico: ")) +
+              geom_segment(aes(x = Proves$cuantil, xend = Proves$cuantil, y = 0,
+                               yend = dchisq(x = Proves$cuantil, df = 1),
+                               colour = "Cuantíl: ")) +
+              stat_function(color = NA, fun= ~under_curve(type = "greater",
+                                                          alpha = input$alphaTest, x = .x,
+                                                          fun = dchisq, fq = qchisq,
+                                                          df = 1),
+                            geom = 'area', fill = '#13378f', alpha = 0.2)+
+              scale_colour_manual(values = c("#386df2", "black"))
+          }
+        }
+        if(input$MCNemarTestInput == "Datos"){
+          validate(verify_matrix(input$McNemarMatrixDatos))
+          prueba <- NULL
+          ma <- input$McNemarMatrixDatos
+          if(input$MCNemarTPCorrection){
+            if(input$MCNCorrection == "MCNCorrectionCont"){
+              plotis_NP$plot <-data_frame(x = c(0,input$RangoX2NP)) %>% 
+                ggplot(aes(x = x)) + 
+                guides(colour = guide_legend(label.position = "left", title = NULL)) +
+                labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") + 
+                general_theme +
+                stat_function(fun = ~dchisq(.x, df = 1)) +
+                ggtitle(TeX(paste("$\\chi_{1}$"))) +
+                geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0,
+                                 yend = dchisq(x = Proves$statistical, df = 1),
+                                 colour = "Estadístico: ")) +
+                geom_segment(aes(x = Proves$cuantil, xend = Proves$cuantil, y = 0,
+                                 yend = dchisq(x = Proves$cuantil, df = 1),
+                                 colour = "Cuantíl: ")) +
+                stat_function(color = NA, fun= ~under_curve(type = "greater",
+                                                            alpha = input$alphaTest, x = .x,
+                                                            fun = dchisq, fq = qchisq,
+                                                            df = 1),
+                              geom = 'area', fill = '#13378f', alpha = 0.2)+
+                scale_colour_manual(values = c("#386df2", "black"))
+            }
+            if(input$MCNCorrection %in% c("MCNCorrectionExact", "MCNCorrectionBinom")){
+              binom_reject <- reject_zone_discrete(type = "two.sided", n = Proves$test$parameter, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+              data <- tibble(x = seq(0, Proves$test$parameter)[!(seq(0, Proves$test$parameter) %in% binom_reject$x)], y = dbinom(x = x, size = Proves$test$parameter, prob = 0.5))
+              binom_stat <- tibble(x = Proves$statistical, y = dbinom(x, size = Proves$test$parameter, prob = 0.5))
+              binom_cuantil <- cuantil_assing(type = "two.sided", alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+              
+              plotis_NP$plot <- data %>% ggplot(aes(x = x, y = y)) + 
+                geom_segment(aes(xend=x, yend=0), color = "grey53") +
+                geom_point(color = "grey53") +
+                #Región de rechazo
+                geom_segment(data = binom_reject, aes(xend = x, yend = 0),  color = '#13378f', alpha = 0.4) +
+                geom_point(data = binom_reject, color = '#13378f', alpha = 0.4) + 
+                #Estadístico
+                geom_segment(data = binom_stat, aes(xend  = x, yend = 0, colour = "Estadístico: ")) + 
+                geom_point(data = binom_stat, aes(colour = "Estadístico: ")) +
+                #Cuantiles
+                geom_segment(data = binom_cuantil, aes(xend = x, yend = 0, colour = "Cuantíl: ")) + 
+                geom_point(data = binom_cuantil, aes(colour = "Cuantíl: ")) + 
+                #Diseño
+                scale_colour_manual(values = c("#386df2", "black")) +
+                ggtitle(TeX(paste("$Binomial(", Proves$test$parameter,", ", 0.5, ")$"))) +
+                general_theme + 
+                guides(colour = guide_legend(label.position = "left", title = NULL)) +
+                labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") 
+            }
+          }else{
+            plotis_NP$plot <-data_frame(x = c(0,input$RangoX2NP)) %>% 
+              ggplot(aes(x = x)) + 
+              guides(colour = guide_legend(label.position = "left", title = NULL)) +
+              labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") + 
+              general_theme +
+              stat_function(fun = ~dchisq(.x, df = 1)) +
+              ggtitle(TeX(paste("$\\chi_{1}$"))) +
+              geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0,
+                               yend = dchisq(x = Proves$statistical, df = 1),
+                               colour = "Estadístico: ")) +
+              geom_segment(aes(x = Proves$cuantil, xend = Proves$cuantil, y = 0,
+                               yend = dchisq(x = Proves$cuantil, df = 1),
+                               colour = "Cuantíl: ")) +
+              stat_function(color = NA, fun= ~under_curve(type = "greater",
+                                                          alpha = input$alphaTest, x = .x,
+                                                          fun = dchisq, fq = qchisq,
+                                                          df = 1),
+                            geom = 'area', fill = '#13378f', alpha = 0.2)+
+              scale_colour_manual(values = c("#386df2", "black"))
           }
         }
       }
@@ -1106,6 +1299,39 @@ server <- function(input, output, session) {
     }else{
       selectInput("SigTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$SigTPvar_1_aux)
     }
+  })
+  #McNemar
+  output$McNemarTPvar_1 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate("Se necesitan al menos dos variables para esta prueba")
+    }else{
+      selectInput("McNemarTPvar_1_aux",label = "Selecciona tus variables",  choices = names(data()))
+    }
+  })
+  output$McNemarTPvar_2 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate()
+    }else{
+      selectInput("McNemarTPvar_2_aux",label = NULL,  choices = names(data()) %rc% input$McNemarTPvar_1_aux)
+    }
+  })
+  #Actualización de la matriz McNemar
+  observeEvent({
+    # req(input$file)
+    # if (isTruthy(input$uno) && isTruthy(input$dos)) TRUE
+    # if(check_leves(data()[[input$McNemarTPvar_1_aux]], data()[[input$McNemarTPvar_2_aux]])) TRUE
+    # else return()
+    input$CheckDataMcNemar
+  },{
+    m1 <- data()[[input$McNemarTPvar_1_aux]]
+    m2 <- data()[[input$McNemarTPvar_2_aux]]
+    validate(check_leves(m1,m2))
+    t <- table(m1, m2)
+    attr(t, "dimnames") <- NULL
+    m <- matrix(t, 2, 2, dimnames = list(c("Antes 0", "Antes 1"), c("Después 0", "Después 1")))
+    updateMatrixInput(session = session, inputId = "McNemarMatrixDatos", value = m)
   })
   
   #Summary de las pruebas----------------------------------------------------------------
@@ -1401,9 +1627,81 @@ server <- function(input, output, session) {
           }
         }
       }
-      if(input$BinomialTest == "McNemar"){}
-      if(input$BinomialTest == "Cox"){}
-      if(input$BinomialTest == "Stuart"){}
+      if(input$BinomialTest == "McNemar"){
+        validate(need(input$MCNemarTestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$MCNemarTestInput == "Manual"){
+          validate(verify_matrix(input$McNemarInputMatrix))
+          prueba <- NULL
+          ma <- input$McNemarInputMatrix
+          if(input$MCNemarTPCorrection){
+            if(input$MCNCorrection == "MCNCorrectionCont"){
+              prueba <- mcnemar.test(input$McNemarInputMatrix, correct = T)
+              Proves$statistical <- ((abs(ma[1,2]-ma[2,1])-1)^2)/(ma[1,2]+ma[2,1])
+              Proves$cuantil <- qchisq(1-input$alphaTest, df = 1)
+            }
+            if(input$MCNCorrection == "MCNCorrectionExact"){
+              prueba <- exact2x2::mcnemar.exact(input$McNemarInputMatrix, conf.level = 1 - input$alphaTest)
+              Proves$statistical <- ma[1,2]
+              n <- ma[1,2] + ma[2,1]
+              q <- qbinom(input$alphaTest/2, size = n, 0.5)
+              Proves$cuantil <- c(q, n-q)
+            }
+            if(input$MCNCorrection == "MCNCorrectionBinom"){
+              #Esta prueba permite diferentes casos, por el momento solo se dejará el caso de dos colas
+              b <- ma[1,2]
+              c <- ma[2,1]
+              prueba <- exactci::binom.exact(x = b, n = b + c, p = 0.5, conf.level = 1 - input$alphaTest)
+              Proves$statistical <- ma[1,2]
+              n <- ma[1,2] + ma[2,1]
+              q <- qbinom(input$alphaTest/2, size = n, 0.5)
+              Proves$cuantil <- c(q, n-q)
+            }
+          }else{
+            prueba <- mcnemar.test(input$McNemarInputMatrix)
+            Proves$statistical <- ((ma[1,2]-ma[2,1])^2)/(ma[1,2]+ma[2,1])
+            Proves$cuantil <- qchisq(1-input$alphaTest, df = 1)
+          }
+          Proves$test <- prueba
+          Proves$p_value <- prueba$p.value
+        }
+        if(input$MCNemarTestInput == "Datos"){
+          validate(verify_matrix(input$McNemarMatrixDatos))
+          prueba <- NULL
+          ma <- input$McNemarMatrixDatos
+          if(input$MCNemarTPCorrection){
+            if(input$MCNCorrection == "MCNCorrectionCont"){
+              prueba <- mcnemar.test(input$McNemarMatrixDatos, correct = T)
+              Proves$statistical <- ((abs(ma[1,2]-ma[2,1])-1)^2)/(ma[1,2]+ma[2,1])
+              Proves$cuantil <- qchisq(1-input$alphaTest, df = 1)
+            }
+            if(input$MCNCorrection == "MCNCorrectionExact"){
+              prueba <- exact2x2::mcnemar.exact(input$McNemarMatrixDatos, conf.level = 1 - input$alphaTest)
+              Proves$statistical <- ma[1,2]
+              n <- ma[1,2] + ma[2,1]
+              q <- qbinom(input$alphaTest/2, size = n, 0.5)
+              Proves$cuantil <- c(q, n-q)
+            }
+            if(input$MCNCorrection == "MCNCorrectionBinom"){
+              #Esta prueba permite diferentes casos, por el momento solo se dejará el caso de dos colas
+              b <- ma[1,2]
+              c <- ma[2,1]
+              prueba <- exactci::binom.exact(x = b, n = b + c, p = 0.5, conf.level = 1 - input$alphaTest)
+              Proves$statistical <- ma[1,2]
+              n <- ma[1,2] + ma[2,1]
+              q <- qbinom(input$alphaTest/2, size = n, 0.5)
+              Proves$cuantil <- c(q, n-q)
+            }
+          }else{
+            prueba <- mcnemar.test(input$McNemarMatrixDatos)
+            Proves$statistical <- ((ma[1,2]-ma[2,1])^2)/(ma[1,2]+ma[2,1])
+            Proves$cuantil <- qchisq(1-input$alphaTest, df = 1)
+          }
+          Proves$test <- prueba
+          Proves$p_value <- prueba$p.value
+        }
+      }
+      if(input$BinomialTest == "Cox Stuart"){}
+      
     }
     if(input$NParametricTest == "Rango"){
       validate(need(input$RangoTest %in% c("U-Mann-Whitney", "Kruskal-Wallis", "Friedman"), "Selecciona un tipo de prueba de Rango"))

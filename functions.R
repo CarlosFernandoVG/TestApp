@@ -160,3 +160,12 @@ quantile.interval <- function(x, n, quantile = .5, conf.level = .95, correct = F
   conf.level <- 1-alpha1-alpha2
   list(quantile = quantile, conf.level = conf.level, r = r, s = s, interval = c(clo,chi))
 }
+#Funciones para la prueba de McNemar
+verify_matrix <- function(m){
+  if(!is.na(sum(m))) NULL
+  else "Necesitas tener una matriz adecuada antes de continuar"
+}
+check_leves <- function(var1, var2){
+  if(length(levels(as.factor(var1))) == 2 && length(levels(as.factor(var2))) == 2 && levels(as.factor(var1)) == levels(as.factor(var2))) NULL
+  else FALSE
+}
