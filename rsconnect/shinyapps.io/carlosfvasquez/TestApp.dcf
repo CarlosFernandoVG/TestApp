@@ -5,10 +5,10 @@ account: carlosfvasquez
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3712892
-bundleId: 4298389
+bundleId: 4327532
 url: https://carlosfvasquez.shinyapps.io/TestApp/
-when: 1614830354.33397
-lastSyncTime: 1614830354.334
+when: 1615404536.50835
+lastSyncTime: 1615404536.50837
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: .gitattributes|LICENSE|README.md

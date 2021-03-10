@@ -169,3 +169,205 @@ check_leves <- function(var1, var2){
   if(length(levels(as.factor(var1))) == 2 && length(levels(as.factor(var2))) == 2 && levels(as.factor(var1)) == levels(as.factor(var2))) NULL
   else FALSE
 }
+
+
+
+
+#Attemps to improve my code--------------------------------------------------------------
+  ##Cambiar ejes de las gráficas---------------------------------------------------------
+# observeEvent(input$RangoX1NP | input$RangoX2NP,{
+#   if(input$NParametricTest == "Binomial"){
+#     if(input$BinomialTest == 'Proporciones'){
+#       if(input$BinomialTestInput == 'Manual'){
+#         validate(need(input$BTtrials , "Ingresa el número de éxitos"))
+#         validate(need(input$BTn , "Ingresa el tamaño de la muestra"))
+#         if(input$BTPNormal){
+#           if(input$BinomialTestKindOfTestM == "two.sided"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#           if(input$BinomialTestKindOfTestM != "two.sided"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#         }else{
+#           output$DensityPlot_NParametric <- renderPlot({
+#             plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#           }, bg="transparent")
+#         }
+#       }else{
+#         req(input$file)
+#         if(input$BTPNormal){
+#           if(input$BinomialTestKindOfTestD == "two.sided"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#           if(input$BinomialTestKindOfTestD != "two.sided"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#         }else{
+#           output$DensityPlot_NParametric <- renderPlot({
+#             plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#           }, bg="transparent")
+#         }
+#       }
+#     }
+#     if(input$BinomialTest == 'Cuantiles'){
+#       validate(need(input$CuantilTestInput, ""))
+#       if(input$CuantilTestInput == 'Manual'){
+#         validate(need(input$CuantilTT1 , "Ingresa los datos necesarios"))
+#         validate(need(input$CuantilTT2 , "Ingresa los datos necesarios"))
+#         validate(need(input$CuantilTN , "Ingresa el tamaño de la muestra"))
+#         validate(need(input$CuantilTCuantilM , "Ingresa el cuantil al que deseas realizar la prueba"))
+#         if(input$CuanTPNormal){
+#           output$DensityPlot_NParametric <- renderPlot({
+#             plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#           }, bg="transparent")
+#         }else{
+#           output$DensityPlot_NParametric <- renderPlot({
+#             plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#           }, bg="transparent")
+#         }
+#       }else{
+#         req(input$file)
+#         if(input$CuanTPNormal){
+#           output$DensityPlot_NParametric <- renderPlot({
+#             plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#           }, bg="transparent")
+#         }else{
+#           output$DensityPlot_NParametric <- renderPlot({
+#             plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#           }, bg="transparent")
+#         }
+#       }
+#     }
+#     if(input$BinomialTest == 'Signos'){
+#       validate(need(input$SignosTestInput, ""))
+#       if(input$SignosTestInput == 'Manual'){
+#         validate(need(input$SigTGreater , "Ingresa la información necesaria"))
+#         validate(need(input$SigTLess , "Ingresa la información necesaria"))
+#         if(input$SigTPNormal){
+#           if(input$SignosTestKindOfTestM == "two.sided"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#           if(input$SignosTestKindOfTestM != "two.sided"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#         }else{
+#           output$DensityPlot_NParametric <- renderPlot({
+#             plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#           }, bg="transparent")
+#         }
+#       }else{
+#         req(input$file)
+#         if(input$SigTPNormal){
+#           if(input$SignosTestKindOfTestD == "two.sided"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#           if(input$SignosTestKindOfTestD != "two.sided"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#         }else{
+#           output$DensityPlot_NParametric <- renderPlot({
+#             plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#           }, bg="transparent")
+#         }
+#       }
+#     }
+#     if(input$BinomialTest == "McNemar"){
+#       validate(need(input$MCNemarTestInput, ""))
+#       if(input$MCNemarTestInput == "Manual"){
+#         validate(verify_matrix(input$McNemarInputMatrix))
+#         if(input$MCNemarTPCorrection){
+#           if(input$MCNCorrection == "MCNCorrectionCont"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#           if(input$MCNCorrection %in% c("MCNCorrectionExact", "MCNCorrectionBinom")){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#         }else{
+#           output$DensityPlot_NParametric <- renderPlot({
+#             plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#           }, bg="transparent")
+#         }
+#       }
+#       if(input$MCNemarTestInput == "Datos"){
+#         validate(verify_matrix(input$McNemarMatrixDatos))
+#         if(input$MCNemarTPCorrection){
+#           if(input$MCNCorrection == "MCNCorrectionCont"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#           if(input$MCNCorrection %in% c("MCNCorrectionExact", "MCNCorrectionBinom")){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#         }else{
+#           output$DensityPlot_NParametric <- renderPlot({
+#             plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#           }, bg="transparent")
+#         }
+#       }
+#     }
+#     if(input$BinomialTest == 'Cox Stuart'){
+#       validate(need(input$CSTestInput, ""))
+#       if(input$CSTestInput == 'Manual'){
+#         validate(need(input$CSTGreater , "Ingresa la información necesaria"))
+#         validate(need(input$CSTLess , "Ingresa la información necesaria"))
+#         if(input$CSTPNormal){
+#           if(input$CSTestKindOfTestM == "two.sided"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#           if(input$CSTestKindOfTestM != "two.sided"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#         }else{
+#           output$DensityPlot_NParametric <- renderPlot({
+#             plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#           }, bg="transparent")
+#         }
+#       }else{
+#         req(input$file)
+#         if(input$CSTPNormal){
+#           if(input$CSTestKindOfTestD == "two.sided"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#           if(input$CSTestKindOfTestD != "two.sided"){
+#             output$DensityPlot_NParametric <- renderPlot({
+#               plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#             }, bg="transparent")
+#           }
+#         }else{
+#           output$DensityPlot_NParametric <- renderPlot({
+#             plotis_NP$plot + xlim(c(input$RangoX1NP, input$RangoX2NP))
+#           }, bg="transparent")
+#         }
+#       }
+#     }
+#   }
+# },ignoreInit = TRUE)

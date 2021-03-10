@@ -141,7 +141,7 @@ ui <- navbarPage(title = "TestApp",
                                            )
                                     ),
                                     column(width = 8, 
-                                           # Proporciones-------------------------------------------------------------------
+                                           #Proporciones-------------------------------------------------------------------
                                            conditionalPanel(
                                              condition = "input.BinomialTest == 'Proporciones'",
                                              radioGroupButtons(
@@ -154,7 +154,7 @@ ui <- navbarPage(title = "TestApp",
                                              "¿Deseas aplicar una aproximación normal?",
                                              checkboxInput("BTPNormal", label = NULL, value = F)
                                            ),
-                                           # Cuantiles----------------------------------------------------------------------
+                                           #Cuantiles----------------------------------------------------------------------
                                            conditionalPanel(
                                              condition = "input.BinomialTest == 'Cuantiles'",
                                              radioGroupButtons(
@@ -195,86 +195,118 @@ ui <- navbarPage(title = "TestApp",
                                                               radioButtons("MCNCorrection", label = NULL,
                                                                            choices = list("Corrección de continuidad" = "MCNCorrectionCont", "exact2X2::mcnemar.exact()" = "MCNCorrectionExact", "exactci::binom.exact()" = "MCNCorrectionBinom"))
                                              )
+                                           ),
+                                           #CoxStuart------------------------------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.BinomialTest == 'Cox Stuart'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "CSTestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             ),
+                                             "¿Deseas aplicar una aproximación normal?",
+                                             checkboxInput("CSTPNormal", label = NULL, value = F)
                                            )
                                     )
-                                  ),
-                                  #Paneles condicionales para cada prueba Binomial---------------------------------------------------------------------------------------------
-                                  conditionalPanel(condition = "input.BinomialTest == 'Proporciones'",
-                                                   conditionalPanel(
-                                                     condition = "input.BinomialTestInput == 'Manual'",
-                                                     numericInput(inputId = "BTtrials", label = "Número de éxitos", value = NA),
-                                                     numericInput(inputId = "BTn", label = "Tamaño de la muestra", value = NA, min = 0),
-                                                     numericInput(inputId = "BTpM", label = "$p$ específica", value = 0.5),
-                                                     selectInput(inputId = "BinomialTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                   ),
-                                                   conditionalPanel(
-                                                     condition = "input.BinomialTestInput == 'Datos'",
-                                                     "Tu variable debe estar codificada con 0s y 1s (0: Fallos, 1: Éxitos)",
-                                                     uiOutput("BinomialTestVar"),
-                                                     numericInput(inputId = "BTpD", label = "$p$ específica", value = 0.5),
-                                                     selectInput(inputId = "BinomialTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                   )
-                                  ),
-                                  conditionalPanel(condition = "input.BinomialTest == 'Cuantiles'",
-                                                   conditionalPanel(
-                                                     condition = "input.CuantilTestInput == 'Manual'",
-                                                     numericInput(inputId = "CuantilTT1", label = "$T_1 = $ # de obs. $\\leq x^{*}$", value = NA, min = 0),
-                                                     numericInput(inputId = "CuantilTT2", label = "$T_2 = $ # de obs. $< x^{*}$", value = NA, min = 0),
-                                                     numericInput(inputId = "CuantilTN", label = "Tamaño de la muestra", value = NA, min = 0),
-                                                     numericInput(inputId = "CuantilTCuantilM", label = "Cuantil", value = NA, min = 0),
-                                                     selectInput(inputId = "CuantilTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                   ),
-                                                   conditionalPanel(
-                                                     condition = "input.CuantilTestInput == 'Datos'",
-                                                     "Tus datos deben ser numéricos",
-                                                     uiOutput("CuantilTPvar"),
-                                                     numericInput(inputId = "CuantilTPX", label = "$x^{*}$", value = NA, min = 0),
-                                                     numericInput(inputId = "CuantilTCuantilD", label = "Cuantil", value = NA, min = 0),
-                                                     selectInput(inputId = "CuantilTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                   )
-                                  ),
-                                  conditionalPanel(condition = "input.BinomialTest == 'Signos'",
-                                                   conditionalPanel(
-                                                     condition = "input.SignosTestInput == 'Manual'",
-                                                     numericInput(inputId = "SigTGreater", label = "# de casos: $X_i<Y_i$", value = NA, min = 0),
-                                                     numericInput(inputId = "SigTLess", label = "# de casos: $X_i>Y_i$", value = NA, min = 0),
-                                                     selectInput(inputId = "SignosTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                   ),
-                                                   conditionalPanel(
-                                                     condition = "input.SignosTestInput == 'Datos'",
-                                                     "Tus datos deben ser numéricos",
-                                                     uiOutput("SigTPvar_1"),
-                                                     uiOutput("SigTPvar_2"),
-                                                     selectInput(inputId = "SignosTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                   )
-                                  ),
-                                  conditionalPanel(condition = "input.BinomialTest == 'McNemar'",
-                                                   conditionalPanel(condition = "input.MCNemarTestInput == 'Manual'",
-                                                                    matrixInput("McNemarInputMatrix", value = mMcNemar,
-                                                                                rows = list(
-                                                                                  # extend = TRUE,
-                                                                                  names = TRUE),
-                                                                                class = "numeric",
-                                                                                cols = list(names = TRUE))
-                                                   ),
-                                                   conditionalPanel(condition = "input.MCNemarTestInput == 'Datos'",
-                                                                    #Podríamos agregar una opción para seleccionar los factores
-                                                                    "Selecciona las variables que desees utilizar para crear la matriz de contingencia.",
-                                                                    "Recuerda que los datos deben ser nominales con las mismas 2 categorías en cada variable, por lo que si ingresas valores numéricos, se tomarán como factores de a lo más dos niveles.",
-                                                                    uiOutput("McNemarTPvar_1"),
-                                                                    uiOutput("McNemarTPvar_2"),
-                                                                    "Verifica que tus datos formen correctamente una matriz de contingencia apropiada. Si no se actualiza la matriz, revisa tus datos.",
-                                                                    "",
-                                                                    actionButton("CheckDataMcNemar", "Checar datos"),
-                                                                    matrixInput("McNemarMatrixDatos", value = matrix(rep(NA,4), 2, 2, dimnames = list(c("Antes 0", "Antes 1"), c("Después 0", "Después 1"))),
-                                                                                rows = list(
-                                                                                  # extend = TRUE,
-                                                                                  names = TRUE),
-                                                                                class = "numeric",
-                                                                                cols = list(names = TRUE))
-                                                   )
-                                  ),
-                                  conditionalPanel(condition = "input.BinomialTest == 'Cox Stuart'")
+                                  )
+                                ),
+                                #Paneles condicionales para cada prueba Binomial---------------------------------------------------------------------------------------------
+                                conditionalPanel(condition = "input.BinomialTest == 'Proporciones'",
+                                                 #Proporciones---------------------------------------------------------------------------------------------------------------
+                                                 conditionalPanel(
+                                                   condition = "input.BinomialTestInput == 'Manual'",
+                                                   numericInput(inputId = "BTtrials", label = "Número de éxitos", value = NA),
+                                                   numericInput(inputId = "BTn", label = "Tamaño de la muestra", value = NA, min = 0),
+                                                   numericInput(inputId = "BTpM", label = "$p$ específica", value = 0.5),
+                                                   selectInput(inputId = "BinomialTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                 ),
+                                                 conditionalPanel(
+                                                   condition = "input.BinomialTestInput == 'Datos'",
+                                                   "Tu variable debe estar codificada con 0s y 1s (0: Fallos, 1: Éxitos)",
+                                                   uiOutput("BinomialTestVar"),
+                                                   numericInput(inputId = "BTpD", label = "$p$ específica", value = 0.5),
+                                                   selectInput(inputId = "BinomialTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                 )
+                                ),
+                                conditionalPanel(condition = "input.BinomialTest == 'Cuantiles'",
+                                                 #Cuantiles----------------------------------------------------------------------------------------------------------------
+                                                 conditionalPanel(
+                                                   condition = "input.CuantilTestInput == 'Manual'",
+                                                   numericInput(inputId = "CuantilTT1", label = "$T_1 = $ # de obs. $\\leq x^{*}$", value = NA, min = 0),
+                                                   numericInput(inputId = "CuantilTT2", label = "$T_2 = $ # de obs. $< x^{*}$", value = NA, min = 0),
+                                                   numericInput(inputId = "CuantilTN", label = "Tamaño de la muestra", value = NA, min = 0),
+                                                   numericInput(inputId = "CuantilTCuantilM", label = "Cuantil", value = NA, min = 0),
+                                                   selectInput(inputId = "CuantilTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                 ),
+                                                 conditionalPanel(
+                                                   condition = "input.CuantilTestInput == 'Datos'",
+                                                   "Tus datos deben ser numéricos",
+                                                   uiOutput("CuantilTPvar"),
+                                                   numericInput(inputId = "CuantilTPX", label = "$x^{*}$", value = NA, min = 0),
+                                                   numericInput(inputId = "CuantilTCuantilD", label = "Cuantil", value = NA, min = 0),
+                                                   selectInput(inputId = "CuantilTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                 )
+                                ),
+                                conditionalPanel(condition = "input.BinomialTest == 'Signos'",
+                                                 #Signos------------------------------------------------------------------------------------------------------------------
+                                                 conditionalPanel(
+                                                   condition = "input.SignosTestInput == 'Manual'",
+                                                   numericInput(inputId = "SigTGreater", label = "# de casos: $X_i<Y_i$", value = NA, min = 0),
+                                                   numericInput(inputId = "SigTLess", label = "# de casos: $X_i>Y_i$", value = NA, min = 0),
+                                                   selectInput(inputId = "SignosTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                 ),
+                                                 conditionalPanel(
+                                                   condition = "input.SignosTestInput == 'Datos'",
+                                                   "Tus datos deben ser numéricos",
+                                                   uiOutput("SigTPvar_1"),
+                                                   uiOutput("SigTPvar_2"),
+                                                   selectInput(inputId = "SignosTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                 )
+                                ),
+                                conditionalPanel(condition = "input.BinomialTest == 'McNemar'",
+                                                 #McNemar-----------------------------------------------------------------------------------------------------------------
+                                                 conditionalPanel(condition = "input.MCNemarTestInput == 'Manual'",
+                                                                  matrixInput("McNemarInputMatrix", value = mMcNemar,
+                                                                              rows = list(
+                                                                                # extend = TRUE,
+                                                                                names = TRUE),
+                                                                              class = "numeric",
+                                                                              cols = list(names = TRUE))
+                                                 ),
+                                                 conditionalPanel(condition = "input.MCNemarTestInput == 'Datos'",
+                                                                  #Podríamos agregar una opción para seleccionar los factores
+                                                                  "Selecciona las variables que desees utilizar para crear la matriz de contingencia.",
+                                                                  "Recuerda que los datos deben ser nominales con las mismas 2 categorías en cada variable, por lo que si ingresas valores numéricos, se tomarán como factores de a lo más dos niveles.",
+                                                                  uiOutput("McNemarTPvar_1"),
+                                                                  uiOutput("McNemarTPvar_2"),
+                                                                  "Verifica que tus datos formen correctamente una matriz de contingencia apropiada. Si no se actualiza la matriz, revisa tus datos.",
+                                                                  "",
+                                                                  actionButton("CheckDataMcNemar", "Checar datos"),
+                                                                  matrixInput("McNemarMatrixDatos", value = matrix(rep(NA,4), 2, 2, dimnames = list(c("Antes 0", "Antes 1"), c("Después 0", "Después 1"))),
+                                                                              rows = list(
+                                                                                # extend = TRUE,
+                                                                                names = TRUE),
+                                                                              class = "numeric",
+                                                                              cols = list(names = TRUE))
+                                                 )
+                                ),
+                                conditionalPanel(condition = "input.BinomialTest == 'Cox Stuart'",
+                                                 #CoxStuart---------------------------------------------------------------------------------------------------------------
+                                                 conditionalPanel(
+                                                   condition = "input.CSTestInput == 'Manual'",
+                                                   numericInput(inputId = "CSTGreater", label = "# de casos: $X_i<Y_i$", value = NA, min = 0),
+                                                   numericInput(inputId = "CSTLess", label = "# de casos: $X_i>Y_i$", value = NA, min = 0),
+                                                   selectInput(inputId = "CSTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                 ),
+                                                 conditionalPanel(
+                                                   condition = "input.CSTestInput == 'Datos'",
+                                                   "Tus datos deben ser numéricos",
+                                                   uiOutput("CSTPvar_1"),
+                                                   uiOutput("CSTPvar_2"),
+                                                   selectInput(inputId = "CSTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                 )
                                 ),
                                 #Pruebas de Rango-------------------------------------------------------------------
                                 conditionalPanel(
@@ -410,11 +442,14 @@ ui <- navbarPage(title = "TestApp",
                                                         conditionalPanel(
                                                           condition = "input.BinomialTestInput == 'Manual' | input.BinomialTestInput == 'Datos' | input.BinomialTest == 'Cuantiles' | input.BinomialTest == 'Signos' | input.BinomialTest == 'McNemar' | input.BinomialTest =='Cox Stuart' | input.RangoTest == 'U-Mann-Whitney' | input.RangoTest == 'Kruskal-Wallis' | input.RangoTest == 'Friedman' | input.VarianzasTest == 'Fisher' | input.VarianzasTest == '>2'",
                                                           column(width = 11,
+                                                                 # width = 12
                                                                  plotOutput("DensityPlot_NParametric")
-                                                          ),
+                                                          )
+                                                          ,
                                                           column(width = 1,
                                                                  dropdownButton(
                                                                    h3("Modificar el rango de tu gráfica"),
+                                                                   "Aún en construcción",
                                                                    numericInput(inputId = "RangoX1NP", "", value = -5, step = 1),
                                                                    numericInput(inputId = "RangoX2NP", "", value = 5, step = 1),
                                                                    circle = FALSE, status = "primary",
@@ -805,10 +840,10 @@ server <- function(input, output, session) {
               scale_colour_manual(values = c("#386df2", "black"))
             
           }else{
-            binom_reject <- reject_zone_discrete(type = input$CuantilTestKindOfTestM, n = Proves$test$parameter, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
-            data <- tibble(x = seq(0, Proves$test$parameter)[!(seq(0, Proves$test$parameter) %in% binom_reject$x)], y = dbinom(x = x, size = Proves$test$parameter, prob = 0.5))
-            binom_stat <- tibble(x = Proves$statistical, y = dbinom(x, size = Proves$test$parameter, prob = 0.5))
-            binom_cuantil <- cuantil_assing(type = input$CuantilTestKindOfTestM, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+            binom_reject <- reject_zone_discrete(type = input$CuantilTestKindOfTestM, n = Proves$test$parameter, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob =  Proves$test$null.value, size = Proves$test$parameter)
+            data <- tibble(x = seq(0, Proves$test$parameter)[!(seq(0, Proves$test$parameter) %in% binom_reject$x)], y = dbinom(x = x, size = Proves$test$parameter, prob =  Proves$test$null.value))
+            binom_stat <- tibble(x = Proves$statistical, y = dbinom(x, size = Proves$test$parameter, prob = Proves$test$null.value))
+            binom_cuantil <- cuantil_assing(type = input$CuantilTestKindOfTestM, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob =  Proves$test$null.value, size = Proves$test$parameter)
             
             plotis_NP$plot <- data %>% ggplot(aes(x = x, y = y)) + 
               geom_segment(aes(xend=x, yend=0), color = "grey53") +
@@ -824,7 +859,7 @@ server <- function(input, output, session) {
               geom_point(data = binom_cuantil, aes(colour = "Cuantíl: ")) + 
               #Diseño
               scale_colour_manual(values = c("#386df2", "black")) +
-              ggtitle(TeX(paste("$Binomial(", Proves$test$parameter,", ", 0.5, ")$"))) +
+              ggtitle(TeX(paste("$Binomial(", Proves$test$parameter,", ", Proves$test$null.value, ")$"))) +
               general_theme + 
               guides(colour = guide_legend(label.position = "left", title = NULL)) +
               labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") 
@@ -845,10 +880,10 @@ server <- function(input, output, session) {
                             geom = 'area', fill = '#13378f', alpha = 0.2)+
               scale_colour_manual(values = c("#386df2", "black"))
           }else{
-            binom_reject <- reject_zone_discrete(type = input$CuantilTestKindOfTestD, n = Proves$test$parameter, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
-            data <- tibble(x = seq(0, Proves$test$parameter)[!(seq(0, Proves$test$parameter) %in% binom_reject$x)], y = dbinom(x = x, size = Proves$test$parameter, prob = 0.5))
-            binom_stat <- tibble(x = Proves$statistical, y = dbinom(x, size = Proves$test$parameter, prob = 0.5))
-            binom_cuantil <- cuantil_assing(type = input$CuantilTestKindOfTestD, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+            binom_reject <- reject_zone_discrete(type = input$CuantilTestKindOfTestD, n = Proves$test$parameter, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob =  Proves$test$null.value, size = Proves$test$parameter)
+            data <- tibble(x = seq(0, Proves$test$parameter)[!(seq(0, Proves$test$parameter) %in% binom_reject$x)], y = dbinom(x = x, size = Proves$test$parameter, prob =  Proves$test$null.value))
+            binom_stat <- tibble(x = Proves$statistical, y = dbinom(x, size = Proves$test$parameter, prob =  Proves$test$null.value))
+            binom_cuantil <- cuantil_assing(type = input$CuantilTestKindOfTestD, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob =  Proves$test$null.value, size = Proves$test$parameter)
             
             plotis_NP$plot <- data %>% ggplot(aes(x = x, y = y)) + 
               geom_segment(aes(xend=x, yend=0), color = "grey53") +
@@ -864,7 +899,7 @@ server <- function(input, output, session) {
               geom_point(data = binom_cuantil, aes(colour = "Cuantíl: ")) + 
               #Diseño
               scale_colour_manual(values = c("#386df2", "black")) +
-              ggtitle(TeX(paste("$Binomial(", Proves$test$parameter,", ", 0.5, ")$"))) +
+              ggtitle(TeX(paste("$Binomial(", Proves$test$parameter,", ", Proves$test$null.value, ")$"))) +
               general_theme + 
               guides(colour = guide_legend(label.position = "left", title = NULL)) +
               labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") 
@@ -1149,11 +1184,149 @@ server <- function(input, output, session) {
           }
         }
       }
+      if(input$BinomialTest == 'Cox Stuart'){
+        validate(need(input$CSTestInput, ""))
+        if(input$CSTestInput == 'Manual'){
+          validate(need(input$CSTGreater , "Ingresa la información necesaria"))
+          validate(need(input$CSTLess , "Ingresa la información necesaria"))
+          if(input$CSTPNormal){
+            if(input$CSTestKindOfTestM == "two.sided"){
+              plotis_NP$plot <-data_frame(x = c(0,input$RangoX2NP)) %>% 
+                ggplot(aes(x = x)) + 
+                guides(colour = guide_legend(label.position = "left", title = NULL)) +
+                labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") + 
+                general_theme +
+                stat_function(fun = ~dchisq(.x, df = Proves$test$parameter)) +
+                ggtitle(TeX(paste("$\\chi_{1}$"))) +
+                geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0,
+                                 yend = dchisq(x = Proves$statistical, df = Proves$test$parameter),
+                                 colour = "Estadístico: ")) +
+                geom_segment(aes(x = Proves$cuantil, xend = Proves$cuantil, y = 0,
+                                 yend = dchisq(x = Proves$cuantil, df = Proves$test$parameter),
+                                 colour = "Cuantíl: ")) +
+                stat_function(color = NA, fun= ~under_curve(type = "greater",
+                                                            alpha = input$alphaTest, x = .x,
+                                                            fun = dchisq, fq = qchisq,
+                                                            df = Proves$test$parameter),
+                              geom = 'area', fill = '#13378f', alpha = 0.2)+
+                scale_colour_manual(values = c("#386df2", "black"))
+            }
+            if(input$CSTestKindOfTestM != "two.sided"){
+              plotis_NP$plot <- data_frame(x = c(input$RangoX1NP,input$RangoX2NP)) %>% 
+                ggplot(aes(x = x)) + 
+                guides(colour = guide_legend(label.position = "left", title = NULL)) +
+                labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") + 
+                general_theme +
+                stat_function(fun = ~dnorm(.x)) +
+                ggtitle(TeX(paste("$N(0,1)$"))) +
+                geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dnorm(Proves$statistical), colour = "Estadístico: ")) +
+                geom_segment(aes(x = Proves$cuantil, xend = Proves$cuantil, y = 0, yend = dnorm(Proves$cuantil), colour = "Cuantíl: ")) +
+                stat_function(color = NA, fun= ~under_curve(type = input$CSTestKindOfTestM, alpha = input$alphaTest, x = .x, fun = dnorm, fq = qnorm),
+                              geom = 'area', fill = '#13378f', alpha = 0.2)+
+                scale_colour_manual(values = c("#386df2", "black"))
+            }
+          }else{
+            binom_reject <- reject_zone_discrete(type = input$CSTestKindOfTestM, n = Proves$test$parameter, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+            data <- tibble(x = seq(0, Proves$test$parameter)[!(seq(0, Proves$test$parameter) %in% binom_reject$x)], y = dbinom(x = x, size = Proves$test$parameter, prob = 0.5))
+            binom_stat <- tibble(x = Proves$statistical, y = dbinom(x, size = Proves$test$parameter, prob = 0.5))
+            binom_cuantil <- cuantil_assing(type = input$CSTestKindOfTestM, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+            
+            plotis_NP$plot <- data %>% ggplot(aes(x = x, y = y)) + 
+              geom_segment(aes(xend=x, yend=0), color = "grey53") +
+              geom_point(color = "grey53") +
+              #Región de rechazo
+              geom_segment(data = binom_reject, aes(xend = x, yend = 0),  color = '#13378f', alpha = 0.4) +
+              geom_point(data = binom_reject, color = '#13378f', alpha = 0.4) + 
+              #Estadístico
+              geom_segment(data = binom_stat, aes(xend  = x, yend = 0, colour = "Estadístico: ")) + 
+              geom_point(data = binom_stat, aes(colour = "Estadístico: ")) +
+              #Cuantiles
+              geom_segment(data = binom_cuantil, aes(xend = x, yend = 0, colour = "Cuantíl: ")) + 
+              geom_point(data = binom_cuantil, aes(colour = "Cuantíl: ")) + 
+              #Diseño
+              scale_colour_manual(values = c("#386df2", "black")) +
+              ggtitle(TeX(paste("$Binomial(", Proves$test$parameter,", ", 0.5, ")$"))) +
+              general_theme + 
+              guides(colour = guide_legend(label.position = "left", title = NULL)) +
+              labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") 
+          }
+        }else{
+          req(input$file)
+          if(input$CSTPNormal){
+            if(input$CSTestKindOfTestD == "two.sided"){
+              plotis_NP$plot <- data_frame(x = c(0,input$RangoX2NP)) %>% 
+                ggplot(aes(x = x)) + 
+                guides(colour = guide_legend(label.position = "left", title = NULL)) +
+                labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") + 
+                general_theme +
+                stat_function(fun = ~dchisq(.x, df = Proves$test$parameter)) +
+                ggtitle(TeX(paste("$\\chi_{1}$"))) +
+                geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0,
+                                 yend = dchisq(x = Proves$statistical, df = Proves$test$parameter),
+                                 colour = "Estadístico: ")) +
+                geom_segment(aes(x = Proves$cuantil, xend = Proves$cuantil, y = 0,
+                                 yend = dchisq(x = Proves$cuantil, df = Proves$test$parameter),
+                                 colour = "Cuantíl: ")) +
+                stat_function(color = NA, fun= ~under_curve(type = "greater",
+                                                            alpha = input$alphaTest, x = .x,
+                                                            fun = dchisq, fq = qchisq,
+                                                            df = Proves$test$parameter),
+                              geom = 'area', fill = '#13378f', alpha = 0.2)+
+                scale_colour_manual(values = c("#386df2", "black"))
+            }
+            if(input$CSTestKindOfTestD != "two.sided"){
+              plotis_NP$plot <- data_frame(x = c(input$RangoX1NP,input$RangoX2NP)) %>% 
+                ggplot(aes(x = x)) + 
+                guides(colour = guide_legend(label.position = "left", title = NULL)) +
+                labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") + 
+                general_theme +
+                stat_function(fun = ~dnorm(.x)) + 
+                ggtitle(TeX(paste("$N(0,1)$"))) + 
+                geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dnorm(Proves$statistical), colour = "Estadístico: ")) + 
+                geom_segment(aes(x = Proves$cuantil, xend = Proves$cuantil, y = 0, yend = dnorm(Proves$cuantil), colour = "Cuantíl: ")) +
+                stat_function(color = NA, fun= ~under_curve(type = input$CSTestKindOfTestD, alpha = input$alphaTest, x = .x, fun = dnorm, fq = qnorm), 
+                              geom = 'area', fill = '#13378f', alpha = 0.2)+
+                scale_colour_manual(values = c("#386df2", "black"))
+            }
+          }else{
+            binom_reject <- reject_zone_discrete(type = input$CSTestKindOfTestD, n = Proves$test$parameter, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+            data <- tibble(x = seq(0, Proves$test$parameter)[!(seq(0, Proves$test$parameter) %in% binom_reject$x)], y = dbinom(x = x, size = Proves$test$parameter, prob = 0.5))
+            binom_stat <- tibble(x = Proves$statistical, y = dbinom(x, size = Proves$test$parameter, prob = 0.5))
+            binom_cuantil <- cuantil_assing(type = input$CSTestKindOfTestD, alpha = input$alphaTest, fun = dbinom, fq = qbinom, prob = 0.5, size = Proves$test$parameter)
+            
+            plotis_NP$plot <- data %>% ggplot(aes(x = x, y = y)) + 
+              geom_segment(aes(xend=x, yend=0), color = "grey53") +
+              geom_point(color = "grey53") +
+              #Región de rechazo
+              geom_segment(data = binom_reject, aes(xend = x, yend = 0),  color = '#13378f', alpha = 0.4) +
+              geom_point(data = binom_reject, color = '#13378f', alpha = 0.4) + 
+              #Estadístico
+              geom_segment(data = binom_stat, aes(xend  = x, yend = 0, colour = "Estadístico: ")) + 
+              geom_point(data = binom_stat, aes(colour = "Estadístico: ")) +
+              #Cuantiles
+              geom_segment(data = binom_cuantil, aes(xend = x, yend = 0, colour = "Cuantíl: ")) + 
+              geom_point(data = binom_cuantil, aes(colour = "Cuantíl: ")) + 
+              #Diseño
+              scale_colour_manual(values = c("#386df2", "black")) +
+              ggtitle(TeX(paste("$Binomial(", Proves$test$parameter,", ", 0.5, ")$"))) +
+              general_theme + 
+              guides(colour = guide_legend(label.position = "left", title = NULL)) +
+              labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") 
+          }
+        }
+      }
     }
     validate(need(!is.null(isolate(plotis_NP$plot)), ""))
-    isolate(plotis_NP$plot)
+    #Falta como actualizar los ejes de las gráficas
+    # g <- plotis_NP$plot
+    # g_aux <- ggplot_build(g)
+    # limits <- g_aux$layout$panel_scales_x[[1]]$range$range
+    # updateNumericInput(session = session, inputId = "RangoX1NP", value = limits[1])
+    # updateNumericInput(session = session, inputId = "RangoX2NP", value = limits[2])
+    # g
+    plotis_NP$plot
   }, bg="transparent")
-  
+
   #Carga de datos-------------------------------------------------------------------------------------------
   data <- reactive({
     validate(need(input$file, 'Por el momento sólo se permiten archivos .csv'))  
@@ -1332,6 +1505,23 @@ server <- function(input, output, session) {
     attr(t, "dimnames") <- NULL
     m <- matrix(t, 2, 2, dimnames = list(c("Antes 0", "Antes 1"), c("Después 0", "Después 1")))
     updateMatrixInput(session = session, inputId = "McNemarMatrixDatos", value = m)
+  })
+  #CoxStuart
+  output$CSTPvar_1 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate("Se necesitan al menos dos variables para esta prueba")
+    }else{
+      selectInput("CSTPvar_1_aux",label = "Selecciona tu variable",  choices = names(data()))
+    }
+  })
+  output$CSTPvar_2 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate()
+    }else{
+      selectInput("CSTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$CSTPvar_1_aux)
+    }
   })
   
   #Summary de las pruebas----------------------------------------------------------------
@@ -1527,7 +1717,7 @@ server <- function(input, output, session) {
           validate(need(input$CuantilTN , "Ingresa el tamaño de la muestra"))
           validate(need(input$CuantilTCuantilM , "Ingresa el cuantil al que deseas realizar la prueba"))
           #Prueba
-          Proves$test <- quantile.test(x = input$CuantilTT1, y =input$CuantilTT2, n = input$CuantilTN,  quantile = input$CuantilTCuantilM, alternative = input$CuantilTestKindOfTestM, conf.level = 1- input$alphaTest, correct = input$CuanTPNormal)
+          Proves$test <- quantile.test(x = input$CuantilTT1, y = input$CuantilTT2, n = input$CuantilTN,  quantile = input$CuantilTCuantilM, alternative = input$CuantilTestKindOfTestM, conf.level = 1- input$alphaTest, correct = input$CuanTPNormal)
           #Estadístico
           Proves$statistical <- Proves$test$statistic
           #P-value
@@ -1700,7 +1890,76 @@ server <- function(input, output, session) {
           Proves$p_value <- prueba$p.value
         }
       }
-      if(input$BinomialTest == "Cox Stuart"){}
+      if(input$BinomialTest == "Cox Stuart"){
+        validate(need(input$CSTestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$CSTestInput == "Datos"){
+          req(input$file)
+          var1 <- data()[[input$CSTPvar_1_aux]]
+          var2 <- data()[[input$CSTPvar_2_aux]]
+          table <- tibble(x = var1, y = var2) %>% filter(x!=y)
+          n <- dim(table)[1]
+          estatistic <- dim(table %>% filter(x>y))[1]
+          #Prueba
+          prueba <- NULL
+          if(input$CSTPNormal){
+            prueba <- prop.test(x = estatistic, n = n, p = 0.5, alternative = input$CSTestKindOfTestD, conf.level = 1 - input$alphaTest)
+          }else{
+            prueba <- binom.test(x = estatistic, n = n, p = 0.5, alternative = input$CSTestKindOfTestD, conf.level = 1 - input$alphaTest)
+          }
+          Proves$test <- prueba
+          
+          #Estadístico
+          if(input$CSTPNormal & input$CSTestKindOfTestD != "two.sided"){
+            Proves$statistical <- sqrt(prueba$statistic)
+          } else Proves$statistical <- prueba$statistic
+          #P-value
+          Proves$p_value <- prueba$p.value
+          #Cuantil
+          if(input$CSTPNormal){
+            if(input$CSTestKindOfTestD == "two.sided"){
+              Proves$cuantil <- qchisq(input$alphaTest, df = prueba$parameter, lower.tail = F)
+            }else{
+              Proves$cuantil <- qnorm(input$alphaTest, lower.tail = (input$CSTestKindOfTestD == "less"))
+            }
+          }else{
+            if(input$CSTestKindOfTestD == "two.sided"){
+              Proves$cuantil <- c(qbinom(p = alpha(input$CSTestKindOfTestD, alpha = input$alphaTest), size =  prueba$parameter, prob = 0.5),qbinom(p = alpha(input$CSTestKindOfTestD, alpha = input$alphaTest), size =  prueba$parameter, prob = 0.5, lower.tail = FALSE))
+            }else{
+              Proves$cuantil <- qbinom(p = input$alphaTest, size =  prueba$parameter, prob = 0.5, lower.tail = (input$CSTestKindOfTestD == "less"))
+            }
+          }
+        }
+        if(input$CSTestInput == "Manual"){
+          validate(need(input$CSTGreater , "Ingresa la información necesaria"))
+          validate(need(input$CSTLess , "Ingresa la información necesaria"))
+          estatistic <- input$CSTGreater
+          n <- input$CSTGreater + input$CSTLess
+          prueba <- NULL
+          if(input$CSTPNormal){
+            prueba <- prop.test(x = estatistic, n = n, p = 0.5, alternative = input$CSTestKindOfTestM, conf.level = 1- input$alphaTest)
+          }else{
+            prueba <- binom.test(x = estatistic, n = n, p = 0.5, alternative = input$CSTestKindOfTestM, conf.level = 1- input$alphaTest)
+          }
+          Proves$test <- prueba
+          if(input$CSTPNormal & input$CSTestKindOfTestM != "two.sided"){
+            Proves$statistical <- sqrt(prueba$statistic)
+          } else Proves$statistical <- prueba$statistic
+          Proves$p_value <- prueba$p.value
+          if(input$CSTPNormal){
+            if(input$CSTestKindOfTestM == "two.sided"){
+              Proves$cuantil <- qchisq(input$alphaTest, df = prueba$parameter, lower.tail = F)
+            }else{
+              Proves$cuantil <- qnorm(input$alphaTest, lower.tail = (input$CSTestKindOfTestM == "less"))
+            }
+          }else{
+            if(input$CSTestKindOfTestM == "two.sided"){
+              Proves$cuantil <- c(qbinom(p = alpha(input$CSTestKindOfTestM, alpha = input$alphaTest), size =  prueba$parameter, prob = 0.5), qbinom(p = alpha(input$CSTestKindOfTestM, alpha = input$alphaTest), size =  prueba$parameter, prob = 0.5, lower.tail = FALSE))
+            }else{
+              Proves$cuantil <- qbinom(p = input$alphaTest, size =  prueba$parameter, prob = 0.5, lower.tail = (input$CSTestKindOfTestM == "less"))
+            }
+          }
+        }
+      }
       
     }
     if(input$NParametricTest == "Rango"){

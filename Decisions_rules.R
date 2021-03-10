@@ -244,6 +244,56 @@ BinomialTestHyp <- conditionalPanel(condition = "input.NParametricTest == 'Binom
                                                                                        "$T> t_{1-\\alpha}$")
                                                      )
                                                      
+                                    ),
+                                    conditionalPanel(condition = "input.BinomialTest == 'Cox Stuart'",
+                                                     conditionalPanel(condition = "input.CSTestInput == 'Manual' & !input.BTPNormal",
+                                                                      conditionalPanel(condition = "input.CSTestKindOfTestM == 'two.sided'",
+                                                                                       align = "center",
+                                                                                       "$T\\leq t\\ o\\ T>n-t$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.CSTestKindOfTestM == 'less'",
+                                                                                       align = "center",
+                                                                                       "$T\\leq t$"),
+                                                                      conditionalPanel(condition = "input.CSTestKindOfTestM == 'greater'",
+                                                                                       align = "center",
+                                                                                       "$T> n-t$")
+                                                     ),
+                                                     conditionalPanel(condition = "input.CSTestInput == 'Manual' & input.BTPNormal",
+                                                                      conditionalPanel(condition = "input.CSTestKindOfTestM == 'two.sided'",
+                                                                                       align = "center",
+                                                                                       "$T\\geq t$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.CSTestKindOfTestM == 'less'",
+                                                                                       align = "center",
+                                                                                       "$T\\leq t$"),
+                                                                      conditionalPanel(condition = "input.CSTestKindOfTestM == 'greater'",
+                                                                                       align = "center",
+                                                                                       "$T\\geq t$")
+                                                     ),
+                                                     conditionalPanel(condition = "input.CSTestInput == 'Datos' & !input.BTPNormal",
+                                                                      conditionalPanel(condition = "input.CSTestKindOfTestD == 'two.sided'",
+                                                                                       align = "center",
+                                                                                       "$T\\leq t\\ o\\ T>n-t$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.CSTestKindOfTestD == 'less'",
+                                                                                       align = "center",
+                                                                                       "$T\\leq t$"),
+                                                                      conditionalPanel(condition = "input.CSTestKindOfTestD == 'greater'",
+                                                                                       align = "center",
+                                                                                       "$T>t$")
+                                                     ),
+                                                     conditionalPanel(condition = "input.CSTestInput == 'Datos' & input.BTPNormal",
+                                                                      conditionalPanel(condition = "input.CSTestKindOfTestD == 'two.sided'",
+                                                                                       align = "center",
+                                                                                       "$T\\geq t$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.CSTestKindOfTestD == 'less'",
+                                                                                       align = "center",
+                                                                                       "$T\\leq t$"),
+                                                                      conditionalPanel(condition = "input.CSTestKindOfTestD == 'greater'",
+                                                                                       align = "center",
+                                                                                       "$T\\geq t$")
+                                                     )
                                     )
 )
 #Attempts----------------------------------------------------------------------------------------------------
