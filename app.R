@@ -311,14 +311,118 @@ ui <- navbarPage(title = "TestApp",
                                 #Pruebas de Rango-------------------------------------------------------------------
                                 conditionalPanel(
                                   condition = "input.NParametricTest == 'Rango'",
-                                  radioGroupButtons(
-                                    selected = NA,
-                                    inputId = "RangoTest",
-                                    label = NULL, 
-                                    direction = "vertical",
-                                    choices = c("U-Mann-Whitney", "Kruskal-Wallis", "Friedman"),
-                                    status = "btn btn-info"
+                                  fluidRow(
+                                    column(width = 5,
+                                           radioGroupButtons(
+                                             selected = NA,
+                                             inputId = "RangoTest",
+                                             label = NULL, 
+                                             direction = "vertical",
+                                             choices = c("U-Mann-Whitney", "Signed-Rank", "Kruskal-Wallis", "Friedman"),
+                                             status = "btn btn-info"
+                                           )
+                                    ),
+                                    column(width = 7,
+                                           #U-Mann-Whitney-------------------------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.RangoTest == 'U-Mann-Whitney'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "U_Mann_WhitneyTestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             ),
+                                             "¿Qué tipo de función deseas utilizar?",
+                                             radioButtons("UMWTypeTest", label = NULL,
+                                                          choices = list("RankTest()" = "UMWRT", "base::wilcox.test()" = "UMWW"))
+                                           ),
+                                           #Signed-Rank-------------------------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.RangoTest == 'Signed-Rank'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "Signed_RankTestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             )
+                                           ),
+                                           #Kruskal-Wallis-------------------------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.RangoTest == 'Kruskal-Wallis'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "Kruskal_WallisTestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             )
+                                           ),
+                                           #Friedman-------------------------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.RangoTest == 'Friedman'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "FriedmanTestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             )
+                                           )
+                                    )
                                   )
+                                ),
+                                #Paneles condicionales para cada prueba de Rangos---------------------------------------------------------------------------------------------
+                                conditionalPanel(condition = "input.RangoTest == 'U-Mann-Whitney'",
+                                                 #U-Mann-Whitney---------------------------------------------------------------------------------------------------------------
+                                                 conditionalPanel(
+                                                   condition = "input.U_Mann_WhitneyTestInput == 'Manual'",
+                                                   "Ingresa tus datos separados por coma para cada muestra",
+                                                   textInput("UMWS1","Muestra 1"),
+                                                   textInput("UMWS2","Muestra 2"),
+                                                   selectInput(inputId = "U_Mann_WhitneyTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                 ),
+                                                 conditionalPanel(
+                                                   condition = "input.U_Mann_WhitneyTestInput == 'Datos'",
+                                                   uiOutput("U_Mann_WhitneyTPvar_1"),
+                                                   uiOutput("U_Mann_WhitneyTPvar_2"),
+                                                   selectInput(inputId = "U_Mann_WhitneyTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                 )
+                                ),
+                                conditionalPanel(condition = "input.RangoTest == 'Signed-Rank'",
+                                                 #U-Mann-Whitney---------------------------------------------------------------------------------------------------------------
+                                                 conditionalPanel(
+                                                   condition = "input.Signed_RankTestInput == 'Manual'",
+                                                   "Ingresa tus datos separados por coma para cada muestra",
+                                                   textInput("SRS1","Muestra 1"),
+                                                   textInput("SRS2","Muestra 2"),
+                                                   selectInput(inputId = "Signed_RankTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                 ),
+                                                 conditionalPanel(
+                                                   condition = "input.Signed_RankTestInput == 'Datos'",
+                                                   uiOutput("Signed_RankTPvar_1"),
+                                                   uiOutput("Signed_RankTPvar_2"),
+                                                   selectInput(inputId = "Signed_RankTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                 )
+                                ),
+                                conditionalPanel(condition = "input.RangoTest == 'Kruskal-Wallis'",
+                                                 #Kruskal-Wallis------------------------------------------------------------------------------------------------------------------
+                                                 conditionalPanel(
+                                                   condition = "input.Kruskal_WallisTestInput == 'Manual'"
+                                                 ),
+                                                 conditionalPanel(
+                                                   condition = "input.Kruskal_WallisTestInput == 'Datos'"
+                                                 )
+                                ),
+                                conditionalPanel(condition = "input.RangoTest == 'Friedman'",
+                                                 #Friedman---------------------------------------------------------------------------------------------------------------
+                                                 conditionalPanel(
+                                                   condition = "input.FriedmanTestInput == 'Manual'"
+                                                 ),
+                                                 conditionalPanel(
+                                                   condition = "input.FriedmanTestInput == 'Datos'"
+                                                 )
                                 ),
                                 #Pruebas de varianza----------------------------------------------------------------
                                 conditionalPanel(
@@ -394,7 +498,7 @@ ui <- navbarPage(title = "TestApp",
                                            TTestHyp, ZTestHyp, ShapiroTestHyp),
                                          conditionalPanel(
                                            condition = "input.KindOfTest == 'No paramétrica'", 
-                                           BinomialTestHyp)
+                                           BinomialTestHyp, RangoTestHyp)
                                        ),
                                        fluidRow(
                                          align = "center",
@@ -406,7 +510,7 @@ ui <- navbarPage(title = "TestApp",
                               ,
                               #Panel inferior-----------------------------------------------------------------------
                               fluidRow(
-                                #Gráficas---------------------------------------------------------------------------
+                                #Gráficas y otros---------------------------------------------------------------------------
                                 column(width = 8,
                                        #Gráfica para pruebas Paramétricas-------------------------------------------
                                        conditionalPanel(
@@ -474,7 +578,16 @@ ui <- navbarPage(title = "TestApp",
                                            condition = "input.NParametricTest == 'Binomial'",
                                            h4(textOutput("headerDescriptionNPTB")),
                                            textOutput("DescriptionNPTB"),
+                                         ),
+                                         conditionalPanel(
+                                           condition = "input.NParametricTest == 'Rango'",
+                                           h4(textOutput("headerDescriptionNPTR")),
+                                           textOutput("DescriptionNPTR"),
                                          )
+                                         
+                                         
+                                         
+                                         
                                        )
                                 )
                               )
@@ -523,6 +636,10 @@ server <- function(input, output, session) {
     req(input$BinomialTest)
     input$BinomialTest
   })
+  output$headerDescriptionNPTR <- renderText({
+    req(input$RangoTest)
+    input$RangoTest
+  })
   
   #Descripción
   output$DescriptionPT <- renderText({
@@ -533,6 +650,11 @@ server <- function(input, output, session) {
     req(input$BinomialTest)
     description_test_PB(input$BinomialTest)
   })
+  output$DescriptionNPTR <- renderText({
+    req(input$RangoTest)
+    description_test_PB(input$RangoTest)
+  })
+  
   
   
   #Gráficas y tablas-------------------------------------------------------------------------------------------------
@@ -1351,7 +1473,7 @@ server <- function(input, output, session) {
         selected = NA)
       updateRadioGroupButtons(
         session = session, inputId = "RangoTest",
-        choices = c("U-Mann-Whitney", "Kruskal-Wallis", "Friedman"),
+        #choices = c("U-Mann-Whitney", "Kruskal-Wallis", "Friedman"),
         selected = NA)
       updateRadioGroupButtons(
         session = session, inputId = "VarianzasTest",
@@ -1523,7 +1645,23 @@ server <- function(input, output, session) {
       selectInput("CSTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$CSTPvar_1_aux)
     }
   })
-  
+  #RankSumTest
+  output$U_Mann_WhitneyTPvar_1 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate("Se necesitan al menos dos variables para esta prueba")
+    }else{
+      selectInput("U_Mann_WhitneyTPvar_1_aux",label = "Selecciona tu variable",  choices = names(data()))
+    }
+  })
+  output$U_Mann_WhitneyTPvar_2 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate()
+    }else{
+      selectInput("U_Mann_WhitneyTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$U_Mann_WhitneyTPvar_1_aux)
+    }
+  })
   #Summary de las pruebas----------------------------------------------------------------
   output$summaryP <- renderPrint({
     req(input$file)
@@ -1960,13 +2098,74 @@ server <- function(input, output, session) {
           }
         }
       }
-      
     }
     if(input$NParametricTest == "Rango"){
-      validate(need(input$RangoTest %in% c("U-Mann-Whitney", "Kruskal-Wallis", "Friedman"), "Selecciona un tipo de prueba de Rango"))
-      if(input$input$RangoTest == "U-Mann-Whitney"){}
-      if(input$input$RangoTest == "Kruskal-Wallis"){}
-      if(input$input$RangoTest == "Friedman"){}
+      validate(need(input$RangoTest %in% c("U-Mann-Whitney", "Signed-Rank", "Kruskal-Wallis", "Friedman"), "Selecciona un tipo de prueba de Rango"))
+      if(input$RangoTest == "U-Mann-Whitney"){
+        validate(need(input$U_Mann_WhitneyTestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$U_Mann_WhitneyTestInput == "Datos"){
+          req(input$file)
+          x <- data()[[input$U_Mann_WhitneyTPvar_1_aux]]
+          y <- data()[[input$U_Mann_WhitneyTPvar_2_aux]]
+          #Prueba
+          prueba <- NULL
+          if(input$UMWTypeTest == "UMWRT"){
+            prueba <- rank_sum(m1 = x, m2 = y, alternative = input$U_Mann_WhitneyTestKindOfTestD,	significance = input$alphaTest)
+          }else{
+            prueba <- wilcox.test(x = x, y = y, alternative = input$U_Mann_WhitneyTestKindOfTestD, conf.level = 1-input$alphaTest)
+          }
+          Proves$test <- prueba
+          
+          #Estadístico
+          Proves$statistical <- prueba$statistic
+          #P-value
+          Proves$p_value <- prueba$p.value
+          #Cuantil
+          if(input$UMWTypeTest == "UMWRT"){ #Rank Sum
+            Proves$cuantil <- prueba$interval
+          }else{ #Wilcox Test
+            if(input$U_Mann_WhitneyTestKindOfTestD == "two.sided"){
+              Proves$cuantil <- c(qwilcox(p = alpha(input$U_Mann_WhitneyTestKindOfTestD, alpha = input$alphaTest), n = length(na.omit(x)), m = length(na.omit(x))), qwilcox(p = alpha(input$U_Mann_WhitneyTestKindOfTestD, alpha = input$alphaTest), n = length(na.omit(x)), m = length(na.omit(x)), lower.tail = F))
+            }
+            else{
+              Proves$cuantil <- qwilcox(p = input$alphaTest, n = length(na.omit(x)), m = length(na.omit(x)), lower.tail = (input$U_Mann_WhitneyTestKindOfTestD == "less"))
+            }
+          }
+        }
+        if(input$U_Mann_WhitneyTestInput == "Manual"){
+          validate(need(input$UMWS1 , "Ingresa los datos de tu primera muestra"))
+          validate(need(input$UMWS2 , "Ingresa los datos de tu segunda muestra"))
+          #Obtenemos los datos de las muestras
+          x <- as.numeric(str_extract_all(input$UMWS1, pattern = "\\d+")[[1]])
+          y <- as.numeric(str_extract_all(input$UMWS2, pattern = "\\d+")[[1]])
+          #Prueba
+          prueba <- NULL
+          if(input$UMWTypeTest == "UMWRT"){
+            prueba <- rank_sum(m1 = x, m2 = y, alternative = input$U_Mann_WhitneyTestKindOfTestM,	significance = input$alphaTest)
+          }else{
+            prueba <- wilcox.test(x = x, y = y, alternative = input$U_Mann_WhitneyTestKindOfTestM, conf.level = 1-input$alphaTest)
+          }
+          Proves$test <- prueba
+          #Estadístico
+          Proves$statistical <- prueba$statistic
+          #P-value
+          Proves$p_value <- prueba$p.value
+          #Cuantil
+          if(input$UMWTypeTest == "UMWRT"){ #Rank Sum
+            Proves$cuantil <- prueba$interval
+          }else{ #Wilcox Test
+            if(input$U_Mann_WhitneyTestKindOfTestM == "two.sided"){
+              Proves$cuantil <- c(qwilcox(p = alpha(input$U_Mann_WhitneyTestKindOfTestM, alpha = input$alphaTest), n = length(na.omit(x)), m = length(na.omit(y))), qwilcox(p = alpha(input$U_Mann_WhitneyTestKindOfTestM, alpha = input$alphaTest), n = length(na.omit(x)), m = length(na.omit(y)), lower.tail = F))
+            }
+            else{
+              Proves$cuantil <- qwilcox(p = input$alphaTest, n = length(na.omit(x)), m = length(na.omit(y)), lower.tail = (input$U_Mann_WhitneyTestKindOfTestM == "less"))
+            }
+          }
+        }
+      }
+      if(input$RangoTest == "Signed-Rank"){}
+      if(input$RangoTest == "Kruskal-Wallis"){}
+      if(input$RangoTest == "Friedman"){}
     }
     if(input$NParametricTest == "Varianzas"){
       validate(need(input$VarianzasTest %in% c("Fisher", ">2"), "Selecciona un tipo de prueba de varianza"))

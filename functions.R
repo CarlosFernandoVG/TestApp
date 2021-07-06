@@ -100,7 +100,7 @@ quantile.test<-function(x, y, n, xstar = 0, quantile = .5, alternative = "two.si
     T1 <- sum(x <= xstar)
     T2 <- sum(x < xstar)
   }else{
-    if(missing(y) && missing(n)) stop("y and n must be initialized")
+    if(missing(y) || missing(n)) stop("y and n must be initialized")
     if(x < y) stop("y must be less or equal to x")
     T1 <- x
     T2 <- y
@@ -173,6 +173,82 @@ check_leves <- function(var1, var2){
 
 
 
+#Funciones para prueba de suma de rangos----------------------------------------------------
+rank_sum <- function(m1, m2, alternative = "two.sided",	significance = 0.05){
+  #Cuando se ingresan datos con muestras de distintos tamaños, pueden existir valores perdidos que alteren los resultados (m y n no serán los correctos)
+  m1 <- na.omit(m1)
+  m2 <- na.omit(m2)
+  if(missing(m1) || missing(m2)) stop("x and y must be initialized")
+  if(length(m1) == 0 ||  length(m1) == 0) stop("x and y must have length greater than 0")
+  empates <- F
+  
+  names(m1) <- rep("m1", length(m1))
+  names(m2) <- rep("m2", length(m2))
+  mt <- sort(c(m1, m2))
+  
+  order <- 1:length(mt)
+  est <- sum(order[which(names(mt)=="m1")])
+  n <- length(m1)
+  m <- length(m2)
+  N <- length(mt)
+  #Repeticiones
+  if(sum(table(mt)>1)>0){
+    #Ahora el estadístico tiene una dist. N(0,1)
+    est <- (est- (n*((N+1)/2)))/
+      (sqrt((n*m/(N*(N-1)))*(sum(order^2))-
+              ((n*m*(N+1)^2)/(4*(N-1)))))
+    empates <- T
+  }
+  if(alternative == "two.sided"){
+    #Rechazamos si T<t_(alpha/2) o T>t_1-(alpha/2)
+    if(empates){
+      q1 <- qnorm(significance/2)
+      q2 <- qnorm(significance/2, lower.tail = F)
+      p_val <- 2*min(pnorm(est), pnorm(est, lower.tail = F))
+    }else{
+      #Para los valores de los cuantiles del estadístico Mann-Whitney Test utilizaremos la siguiente relación
+      #T_W = T_U+n(n+1)/2 donde X tiene tamaño n; T_U es calculado por la función qwilcox()
+      q1 <- qwilcox(significance/2, n, m) + n*(n+1)/2
+      q2 <- n*(n+m+1)-q1
+      p_val <- 2*pnorm((est+1/2-n*((N+1)/2))/(sqrt((n*m*(N+1))/(12))))
+    }
+  }
+  if(alternative == "less"){
+    if(empates){
+      q1 <- qnorm(significance)
+      p_val <- pnorm(est)
+    }else{
+      q1 <- qwilcox(significance, n, m) + n*(n+1)/2
+      p_val <- pnorm((est+1/2-n*((N+1)/2))/(sqrt((n*m*(N+1))/(12))))
+    }
+  }
+  if(alternative == "greater"){
+    if(empates){
+      q2 <- qnorm(significance/2, lower.tail = F)
+      p_val <- pnorm(est, lower.tail = F)
+    }else{
+      q1 <- qwilcox(significance, n, m) + n*(n+1)/2
+      q2 <- n*(n+m+1)-q1
+      p_val <- 1- pnorm((est+1/2-n*((N+1)/2))/(sqrt((n*m*(N+1))/(12))))
+    }
+  }
+  names(est) <- "T"
+  #Aquí se guardará la información sobre los cuantiles
+  if(exists("q1") && exists("q2")){
+    quantiles <- c(q1, q2)
+  }else{
+    if(exists("q1")) quantiles <- c(q1)
+    if(exists("q2")) quantiles <- c(q2)
+  }
+  DNAME <- paste(substitute(x), substitute(y), sep = " and ")
+  RVAL <- list(statistic = est,
+               p.value = as.numeric(p_val), 
+               interval = quantiles, 
+               alternative = alternative, method = if(empates) "Rank-Sum test with ties" else "Rank-Sum test", 
+               data.name = DNAME)
+  class(RVAL) <- "htest"
+  return(RVAL)
+}
 #Attemps to improve my code--------------------------------------------------------------
   ##Cambiar ejes de las gráficas---------------------------------------------------------
 # observeEvent(input$RangoX1NP | input$RangoX2NP,{

@@ -296,6 +296,82 @@ BinomialTestHyp <- conditionalPanel(condition = "input.NParametricTest == 'Binom
                                                      )
                                     )
 )
+#RangoTest-------------------------------------------------------------------------------------------------------
+RangoTestHyp <- conditionalPanel(condition = "input.NParametricTest == 'Rango'",
+                                    conditionalPanel(condition = "input.RangoTest == 'U-Mann-Whitney'",
+                                                     conditionalPanel(condition = "input.U_Mann_WhitneyTestInput == 'Manual'",
+                                                                      conditionalPanel(condition = "input.U_Mann_WhitneyTestKindOfTestM == 'two.sided'",
+                                                                                       align = "center",
+                                                                                       "$T<t_1\\ o\\ T>t_2$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.U_Mann_WhitneyTestKindOfTestM == 'less'",
+                                                                                       align = "center",
+                                                                                       "$T< t$"),
+                                                                      conditionalPanel(condition = "input.U_Mann_WhitneyTestKindOfTestM == 'greater'",
+                                                                                       align = "center",
+                                                                                       "$T>t$")
+                                                     ),
+                                                     conditionalPanel(condition = "input.U_Mann_WhitneyTestInput == 'Datos'",
+                                                                      conditionalPanel(condition = "input.U_Mann_WhitneyTestKindOfTestD == 'two.sided'",
+                                                                                       align = "center",
+                                                                                       "$T<t_1\\ o\\ T>t_2$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.U_Mann_WhitneyTestKindOfTestD == 'less'",
+                                                                                       align = "center",
+                                                                                       "$T< t$"),
+                                                                      conditionalPanel(condition = "input.U_Mann_WhitneyTestKindOfTestD == 'greater'",
+                                                                                       align = "center",
+                                                                                       "$T>t$")
+                                                     )
+                                    ),
+                                    conditionalPanel(condition = "input.RangoTest == 'Signed-Rank'",
+                                                     conditionalPanel(condition = "input.Signed_RankTestInput == 'Manual'",
+                                                                      conditionalPanel(condition = "input.Signed_RankTestKindOfTestM == 'two.sided'",
+                                                                                       align = "center",
+                                                                                       "$T<t_1\\ o\\ T>t_2$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.Signed_RankTestKindOfTestM == 'less'",
+                                                                                       align = "center",
+                                                                                       "$T< t$"),
+                                                                      conditionalPanel(condition = "input.Signed_RankTestKindOfTestM == 'greater'",
+                                                                                       align = "center",
+                                                                                       "$T>t$")
+                                                     ),
+                                                     conditionalPanel(condition = "input.Signed_RankTestInput == 'Datos'",
+                                                                      conditionalPanel(condition = "input.Signed_RankTestKindOfTestD == 'two.sided'",
+                                                                                       align = "center",
+                                                                                       "$T<t_1\\ o\\ T>t_2$"
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.Signed_RankTestKindOfTestD == 'less'",
+                                                                                       align = "center",
+                                                                                       "$T< t$"),
+                                                                      conditionalPanel(condition = "input.Signed_RankTestKindOfTestD == 'greater'",
+                                                                                       align = "center",
+                                                                                       "$T>t$")
+                                                     )
+                                    ),
+                                    conditionalPanel(condition = "input.RangoTest == 'Kruskal-Wallis'",
+                                                     conditionalPanel(condition = "input.Kruskal_WallisTestInput == 'Manual'",
+                                                                      align = "center",
+                                                                      "$T>t$"
+                                                     ),
+                                                     conditionalPanel(condition = "input.Kruskal_WallisTestInput == 'Datos'",
+                                                                      align = "center",
+                                                                      "$T>t$"
+                                                     )
+                                    ),
+                                    conditionalPanel(condition = "input.RangoTest == 'Friedman'",
+                                                     conditionalPanel(condition = "input.FriedmanTestInput == 'Manual'",
+                                                                      align = "center",
+                                                                      "$T>t$"
+                                                     ),
+                                                     conditionalPanel(condition = "input.FriedmanTestInput == 'Datos'",
+                                                                      align = "center",
+                                                                      "$T>t$"
+                                                     )
+                                                     
+                                    )
+)
 #Attempts----------------------------------------------------------------------------------------------------
 
 # HypoKind <- reactiveValues(two = FALSE, right = FALSE, left = FALSE)
