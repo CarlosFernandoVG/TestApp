@@ -184,10 +184,10 @@ rank_sum <- function(m1, m2, alternative = "two.sided",	significance = 0.05){
   
   names(m1) <- rep("m1", length(m1))
   names(m2) <- rep("m2", length(m2))
-  mt <- sort(c(m1, m2))
+  mt <- c(m1, m2)
+  all_ranks <- rank(mt)
   
-  order <- 1:length(mt)
-  est <- sum(order[which(names(mt)=="m1")])
+  est <- sum(all_ranks[which(names(all_ranks)=="m1")])
   n <- length(m1)
   m <- length(m2)
   N <- length(mt)
@@ -195,7 +195,7 @@ rank_sum <- function(m1, m2, alternative = "two.sided",	significance = 0.05){
   if(sum(table(mt)>1)>0){
     #Ahora el estadístico tiene una dist. N(0,1)
     est <- (est- (n*((N+1)/2)))/
-      (sqrt((n*m/(N*(N-1)))*(sum(order^2))-
+      (sqrt((n*m/(N*(N-1)))*(sum(all_ranks^2))-
               ((n*m*(N+1)^2)/(4*(N-1)))))
     empates <- T
   }

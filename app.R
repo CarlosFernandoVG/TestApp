@@ -391,7 +391,7 @@ ui <- navbarPage(title = "TestApp",
                                                  )
                                 ),
                                 conditionalPanel(condition = "input.RangoTest == 'Signed-Rank'",
-                                                 #U-Mann-Whitney---------------------------------------------------------------------------------------------------------------
+                                                 #Signed-Rank---------------------------------------------------------------------------------------------------------------
                                                  conditionalPanel(
                                                    condition = "input.Signed_RankTestInput == 'Manual'",
                                                    "Ingresa tus datos separados por coma para cada muestra",
@@ -409,10 +409,14 @@ ui <- navbarPage(title = "TestApp",
                                 conditionalPanel(condition = "input.RangoTest == 'Kruskal-Wallis'",
                                                  #Kruskal-Wallis------------------------------------------------------------------------------------------------------------------
                                                  conditionalPanel(
-                                                   condition = "input.Kruskal_WallisTestInput == 'Manual'"
+                                                   condition = "input.Kruskal_WallisTestInput == 'Manual'",
+                                                   textInput("KWS","Observaciones"),
+                                                   textInput("KWG","Grupos")
                                                  ),
                                                  conditionalPanel(
-                                                   condition = "input.Kruskal_WallisTestInput == 'Datos'"
+                                                   condition = "input.Kruskal_WallisTestInput == 'Datos'",
+                                                   uiOutput("Kruskal_WallisTPvar_1"),
+                                                   uiOutput("Kruskal_WallisTPvar_2")
                                                  )
                                 ),
                                 conditionalPanel(condition = "input.RangoTest == 'Friedman'",
@@ -547,8 +551,13 @@ ui <- navbarPage(title = "TestApp",
                                                           condition = "input.BinomialTestInput == 'Manual' | input.BinomialTestInput == 'Datos' | input.BinomialTest == 'Cuantiles' | input.BinomialTest == 'Signos' | input.BinomialTest == 'McNemar' | input.BinomialTest =='Cox Stuart' | input.RangoTest == 'U-Mann-Whitney' | input.RangoTest == 'Kruskal-Wallis' | input.RangoTest == 'Friedman' | input.VarianzasTest == 'Fisher' | input.VarianzasTest == '>2'",
                                                           column(width = 11,
                                                                  # width = 12
-                                                                 plotOutput("DensityPlot_NParametric")
+                                                                 plotOutput("DensityPlot_NParametric"),
+                                                                 conditionalPanel(
+                                                                   condition = "input.NParametricTest == 'Rango'  & input.RangoTest == 'Kruskal-Wallis'",
+                                                                   verbatimTextOutput("severalComparisonKW")
+                                                                 )
                                                           )
+                                                          
                                                           ,
                                                           column(width = 1,
                                                                  dropdownButton(
@@ -1449,6 +1458,22 @@ server <- function(input, output, session) {
     plotis_NP$plot
   }, bg="transparent")
 
+  output$severalComparisonKW <- renderPrint({
+    validate(need(input$Kruskal_WallisTestInput, "Aquí se mostraran comparaciones múltiples"))
+    if(input$Kruskal_WallisTestInput == "Datos"){
+      req(input$file)
+      x <- data()[[input$Kruskal_WallisTPvar_1_aux]]
+      g <- data()[[input$Kruskal_WallisTPvar_2_aux]]
+    }
+    if(input$Kruskal_WallisTestInput == "Manual"){
+      validate(need(input$KWS , "Aquí se mostraran comparaciones múltiples"))
+      validate(need(input$KWG , "Aquí se mostraran comparaciones múltiples"))
+      x <- as.numeric(str_extract_all(input$KWS, pattern = "\\d+")[[1]])
+      g <- str_extract_all(input$KWG, pattern = "[^\\s|,]+")[[1]]
+    }
+    pairwise.wilcox.test(x, g)
+  })
+  
   #Carga de datos-------------------------------------------------------------------------------------------
   data <- reactive({
     validate(need(input$file, 'Por el momento sólo se permiten archivos .csv'))  
@@ -1660,6 +1685,40 @@ server <- function(input, output, session) {
       validate()
     }else{
       selectInput("U_Mann_WhitneyTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$U_Mann_WhitneyTPvar_1_aux)
+    }
+  })
+  #SignedRankTest
+  output$Signed_RankTPvar_1 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate("Se necesitan al menos dos variables para esta prueba")
+    }else{
+      selectInput("Signed_RankTPvar_1_aux",label = "Selecciona tu variable",  choices = names(data()))
+    }
+  })
+  output$Signed_RankTPvar_2 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate()
+    }else{
+      selectInput("Signed_RankTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$Signed_RankTPvar_1_aux)
+    }
+  })
+  #Kruskall-Wallis
+  output$Kruskal_WallisTPvar_1 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate("Se necesitan al menos dos variables para esta prueba")
+    }else{
+      selectInput("Kruskal_WallisTPvar_1_aux",label = "Selecciona las observaciones",  choices = names(data()))
+    }
+  })
+  output$Kruskal_WallisTPvar_2 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate()
+    }else{
+      selectInput("Kruskal_WallisTPvar_2_aux",label = "Selecciona la variable que indicará los grupos de tus observaciones",  choices = names(data()) %rc% input$Kruskal_WallisTPvar_1_aux)
     }
   })
   #Summary de las pruebas----------------------------------------------------------------
@@ -2163,8 +2222,82 @@ server <- function(input, output, session) {
           }
         }
       }
-      if(input$RangoTest == "Signed-Rank"){}
-      if(input$RangoTest == "Kruskal-Wallis"){}
+      if(input$RangoTest == "Signed-Rank"){
+        validate(need(input$Signed_RankTestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$Signed_RankTestInput == "Datos"){
+          req(input$file)
+          x <- data()[[input$Signed_RankTPvar_1_aux]]
+          y <- data()[[input$Signed_RankTPvar_2_aux]]
+          #Prueba
+          prueba <- wilcox.test(x = x, y = y, alternative = input$Signed_RankTestKindOfTestD, conf.level = 1-input$alphaTest, paired = TRUE)
+          Proves$test <- prueba
+          #Estadístico
+          Proves$statistical <- prueba$statistic
+          #P-value
+          Proves$p_value <- prueba$p.value
+          #Cuantil
+          if(input$Signed_RankTestKindOfTestD == "two.sided"){
+            Proves$cuantil <- c(qwilcox(p = alpha(input$Signed_RankTestKindOfTestD, alpha = input$alphaTest), n = length(na.omit(x)), m = length(na.omit(x))), qwilcox(p = alpha(input$Signed_RankTestKindOfTestD, alpha = input$alphaTest), n = length(na.omit(x)), m = length(na.omit(x)), lower.tail = F))
+          }
+          else{
+            Proves$cuantil <- qwilcox(p = input$alphaTest, n = length(na.omit(x)), m = length(na.omit(x)), lower.tail = (input$Signed_RankTestKindOfTestD == "less"))
+          }
+        }
+        if(input$Signed_RankTestInput == "Manual"){
+          validate(need(input$SRS1 , "Ingresa los datos de tu primera muestra"))
+          validate(need(input$SRS2 , "Ingresa los datos de tu segunda muestra"))
+          #Obtenemos los datos de las muestras
+          x <- as.numeric(str_extract_all(input$SRS1, pattern = "\\d+")[[1]])
+          y <- as.numeric(str_extract_all(input$SRS2, pattern = "\\d+")[[1]])
+          #Prueba
+          prueba <- wilcox.test(x = x, y = y, alternative = input$Signed_RankTestKindOfTestM, conf.level = 1-input$alphaTest, paired = TRUE)
+          Proves$test <- prueba
+          #Estadístico
+          Proves$statistical <- prueba$statistic
+          #P-value
+          Proves$p_value <- prueba$p.value
+          #Cuantil
+          if(input$Signed_RankTestKindOfTestM == "two.sided"){
+            Proves$cuantil <- c(qwilcox(p = alpha(input$Signed_RankTestKindOfTestM, alpha = input$alphaTest), n = length(na.omit(x)), m = length(na.omit(y))), qwilcox(p = alpha(input$Signed_RankTestKindOfTestM, alpha = input$alphaTest), n = length(na.omit(x)), m = length(na.omit(y)), lower.tail = F))
+          }
+          else{
+            Proves$cuantil <- qwilcox(p = input$alphaTest, n = length(na.omit(x)), m = length(na.omit(y)), lower.tail = (input$Signed_RankTestKindOfTestM == "less"))
+          }
+        }
+      }
+      if(input$RangoTest == "Kruskal-Wallis"){
+        validate(need(input$Kruskal_WallisTestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$Kruskal_WallisTestInput == "Datos"){
+          req(input$file)
+          x <- data()[[input$Kruskal_WallisTPvar_1_aux]]
+          g <- data()[[input$Kruskal_WallisTPvar_2_aux]]
+          #Prueba
+          prueba <- kruskal.test(x = x, g = g)
+          Proves$test <- prueba
+          #Estadístico
+          Proves$statistical <- prueba$statistic
+          #P-value
+          Proves$p_value <- prueba$p.value
+          #Cuantil
+          Proves$cuantil <- qchisq(p = input$alphaTest, df = prueba$parameter, lower.tail = FALSE)
+        }
+        if(input$Kruskal_WallisTestInput == "Manual"){
+          validate(need(input$KWS , "Ingresa todos los datos separados por coma"))
+          validate(need(input$KWG , "Ingresa el grupo perteneciente de cada observación"))
+          #Obtenemos los datos de las muestras
+          x <- as.numeric(str_extract_all(input$KWS, pattern = "\\d+")[[1]])
+          g <- str_extract_all(input$KWG, pattern = "[^\\s|,]+")[[1]]
+          #Prueba
+          prueba <- kruskal.test(x = x, g = g)
+          Proves$test <- prueba
+          #Estadístico
+          Proves$statistical <- prueba$statistic
+          #P-value
+          Proves$p_value <- prueba$p.value
+          #Cuantil
+          Proves$cuantil <- qchisq(p = input$alphaTest, df = prueba$parameter, lower.tail = FALSE)
+        }
+      }
       if(input$RangoTest == "Friedman"){}
     }
     if(input$NParametricTest == "Varianzas"){
