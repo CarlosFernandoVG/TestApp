@@ -49,7 +49,7 @@ ui <- navbarPage(title = "TestApp",
                                   selected = NA,
                                   inputId = "ParametricTest",
                                   label = "Prueba", 
-                                  choices = c("T-test", "Z-test", "Shapiro-Wilks"),
+                                  choices = c("T-test", "Z-test", "Shapiro-Wilks", "Fisher para varianzas"),
                                   direction = "vertical",
                                   status = "btn btn-info"
                                 ),
@@ -210,103 +210,103 @@ ui <- navbarPage(title = "TestApp",
                                              checkboxInput("CSTPNormal", label = NULL, value = F)
                                            )
                                     )
+                                  ),
+                                  #Paneles condicionales para cada prueba Binomial---------------------------------------------------------------------------------------------
+                                  conditionalPanel(condition = "input.BinomialTest == 'Proporciones'",
+                                                   #Proporciones---------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.BinomialTestInput == 'Manual'",
+                                                     numericInput(inputId = "BTtrials", label = "Número de éxitos", value = NA),
+                                                     numericInput(inputId = "BTn", label = "Tamaño de la muestra", value = NA, min = 0),
+                                                     numericInput(inputId = "BTpM", label = "$p$ específica", value = 0.5),
+                                                     selectInput(inputId = "BinomialTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.BinomialTestInput == 'Datos'",
+                                                     "Tu variable debe estar codificada con 0s y 1s (0: Fallos, 1: Éxitos)",
+                                                     uiOutput("BinomialTestVar"),
+                                                     numericInput(inputId = "BTpD", label = "$p$ específica", value = 0.5),
+                                                     selectInput(inputId = "BinomialTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   )
+                                  ),
+                                  conditionalPanel(condition = "input.BinomialTest == 'Cuantiles'",
+                                                   #Cuantiles----------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.CuantilTestInput == 'Manual'",
+                                                     numericInput(inputId = "CuantilTT1", label = "$T_1 = $ # de obs. $\\leq x^{*}$", value = NA, min = 0),
+                                                     numericInput(inputId = "CuantilTT2", label = "$T_2 = $ # de obs. $< x^{*}$", value = NA, min = 0),
+                                                     numericInput(inputId = "CuantilTN", label = "Tamaño de la muestra", value = NA, min = 0),
+                                                     numericInput(inputId = "CuantilTCuantilM", label = "Cuantil", value = NA, min = 0),
+                                                     selectInput(inputId = "CuantilTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.CuantilTestInput == 'Datos'",
+                                                     "Tus datos deben ser numéricos",
+                                                     uiOutput("CuantilTPvar"),
+                                                     numericInput(inputId = "CuantilTPX", label = "$x^{*}$", value = NA, min = 0),
+                                                     numericInput(inputId = "CuantilTCuantilD", label = "Cuantil", value = NA, min = 0),
+                                                     selectInput(inputId = "CuantilTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   )
+                                  ),
+                                  conditionalPanel(condition = "input.BinomialTest == 'Signos'",
+                                                   #Signos------------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.SignosTestInput == 'Manual'",
+                                                     numericInput(inputId = "SigTGreater", label = "# de casos: $X_i<Y_i$", value = NA, min = 0),
+                                                     numericInput(inputId = "SigTLess", label = "# de casos: $X_i>Y_i$", value = NA, min = 0),
+                                                     selectInput(inputId = "SignosTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.SignosTestInput == 'Datos'",
+                                                     "Tus datos deben ser numéricos",
+                                                     uiOutput("SigTPvar_1"),
+                                                     uiOutput("SigTPvar_2"),
+                                                     selectInput(inputId = "SignosTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   )
+                                  ),
+                                  conditionalPanel(condition = "input.BinomialTest == 'McNemar'",
+                                                   #McNemar-----------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(condition = "input.MCNemarTestInput == 'Manual'",
+                                                                    matrixInput("McNemarInputMatrix", value = mMcNemar,
+                                                                                rows = list(
+                                                                                  # extend = TRUE,
+                                                                                  names = TRUE),
+                                                                                class = "numeric",
+                                                                                cols = list(names = TRUE))
+                                                   ),
+                                                   conditionalPanel(condition = "input.MCNemarTestInput == 'Datos'",
+                                                                    #Podríamos agregar una opción para seleccionar los factores
+                                                                    "Selecciona las variables que desees utilizar para crear la matriz de contingencia.",
+                                                                    "Recuerda que los datos deben ser nominales con las mismas 2 categorías en cada variable, por lo que si ingresas valores numéricos, se tomarán como factores de a lo más dos niveles.",
+                                                                    uiOutput("McNemarTPvar_1"),
+                                                                    uiOutput("McNemarTPvar_2"),
+                                                                    "Verifica que tus datos formen correctamente una matriz de contingencia apropiada. Si no se actualiza la matriz, revisa tus datos.",
+                                                                    "",
+                                                                    actionButton("CheckDataMcNemar", "Checar datos"),
+                                                                    matrixInput("McNemarMatrixDatos", value = matrix(rep(NA,4), 2, 2, dimnames = list(c("Antes 0", "Antes 1"), c("Después 0", "Después 1"))),
+                                                                                rows = list(
+                                                                                  # extend = TRUE,
+                                                                                  names = TRUE),
+                                                                                class = "numeric",
+                                                                                cols = list(names = TRUE))
+                                                   )
+                                  ),
+                                  conditionalPanel(condition = "input.BinomialTest == 'Cox Stuart'",
+                                                   #CoxStuart---------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.CSTestInput == 'Manual'",
+                                                     numericInput(inputId = "CSTGreater", label = "# de casos: $X_i<Y_i$", value = NA, min = 0),
+                                                     numericInput(inputId = "CSTLess", label = "# de casos: $X_i>Y_i$", value = NA, min = 0),
+                                                     selectInput(inputId = "CSTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.CSTestInput == 'Datos'",
+                                                     "Tus datos deben ser numéricos",
+                                                     uiOutput("CSTPvar_1"),
+                                                     uiOutput("CSTPvar_2"),
+                                                     selectInput(inputId = "CSTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   )
                                   )
-                                ),
-                                #Paneles condicionales para cada prueba Binomial---------------------------------------------------------------------------------------------
-                                conditionalPanel(condition = "input.BinomialTest == 'Proporciones'",
-                                                 #Proporciones---------------------------------------------------------------------------------------------------------------
-                                                 conditionalPanel(
-                                                   condition = "input.BinomialTestInput == 'Manual'",
-                                                   numericInput(inputId = "BTtrials", label = "Número de éxitos", value = NA),
-                                                   numericInput(inputId = "BTn", label = "Tamaño de la muestra", value = NA, min = 0),
-                                                   numericInput(inputId = "BTpM", label = "$p$ específica", value = 0.5),
-                                                   selectInput(inputId = "BinomialTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                 ),
-                                                 conditionalPanel(
-                                                   condition = "input.BinomialTestInput == 'Datos'",
-                                                   "Tu variable debe estar codificada con 0s y 1s (0: Fallos, 1: Éxitos)",
-                                                   uiOutput("BinomialTestVar"),
-                                                   numericInput(inputId = "BTpD", label = "$p$ específica", value = 0.5),
-                                                   selectInput(inputId = "BinomialTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                 )
-                                ),
-                                conditionalPanel(condition = "input.BinomialTest == 'Cuantiles'",
-                                                 #Cuantiles----------------------------------------------------------------------------------------------------------------
-                                                 conditionalPanel(
-                                                   condition = "input.CuantilTestInput == 'Manual'",
-                                                   numericInput(inputId = "CuantilTT1", label = "$T_1 = $ # de obs. $\\leq x^{*}$", value = NA, min = 0),
-                                                   numericInput(inputId = "CuantilTT2", label = "$T_2 = $ # de obs. $< x^{*}$", value = NA, min = 0),
-                                                   numericInput(inputId = "CuantilTN", label = "Tamaño de la muestra", value = NA, min = 0),
-                                                   numericInput(inputId = "CuantilTCuantilM", label = "Cuantil", value = NA, min = 0),
-                                                   selectInput(inputId = "CuantilTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                 ),
-                                                 conditionalPanel(
-                                                   condition = "input.CuantilTestInput == 'Datos'",
-                                                   "Tus datos deben ser numéricos",
-                                                   uiOutput("CuantilTPvar"),
-                                                   numericInput(inputId = "CuantilTPX", label = "$x^{*}$", value = NA, min = 0),
-                                                   numericInput(inputId = "CuantilTCuantilD", label = "Cuantil", value = NA, min = 0),
-                                                   selectInput(inputId = "CuantilTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                 )
-                                ),
-                                conditionalPanel(condition = "input.BinomialTest == 'Signos'",
-                                                 #Signos------------------------------------------------------------------------------------------------------------------
-                                                 conditionalPanel(
-                                                   condition = "input.SignosTestInput == 'Manual'",
-                                                   numericInput(inputId = "SigTGreater", label = "# de casos: $X_i<Y_i$", value = NA, min = 0),
-                                                   numericInput(inputId = "SigTLess", label = "# de casos: $X_i>Y_i$", value = NA, min = 0),
-                                                   selectInput(inputId = "SignosTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                 ),
-                                                 conditionalPanel(
-                                                   condition = "input.SignosTestInput == 'Datos'",
-                                                   "Tus datos deben ser numéricos",
-                                                   uiOutput("SigTPvar_1"),
-                                                   uiOutput("SigTPvar_2"),
-                                                   selectInput(inputId = "SignosTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                 )
-                                ),
-                                conditionalPanel(condition = "input.BinomialTest == 'McNemar'",
-                                                 #McNemar-----------------------------------------------------------------------------------------------------------------
-                                                 conditionalPanel(condition = "input.MCNemarTestInput == 'Manual'",
-                                                                  matrixInput("McNemarInputMatrix", value = mMcNemar,
-                                                                              rows = list(
-                                                                                # extend = TRUE,
-                                                                                names = TRUE),
-                                                                              class = "numeric",
-                                                                              cols = list(names = TRUE))
-                                                 ),
-                                                 conditionalPanel(condition = "input.MCNemarTestInput == 'Datos'",
-                                                                  #Podríamos agregar una opción para seleccionar los factores
-                                                                  "Selecciona las variables que desees utilizar para crear la matriz de contingencia.",
-                                                                  "Recuerda que los datos deben ser nominales con las mismas 2 categorías en cada variable, por lo que si ingresas valores numéricos, se tomarán como factores de a lo más dos niveles.",
-                                                                  uiOutput("McNemarTPvar_1"),
-                                                                  uiOutput("McNemarTPvar_2"),
-                                                                  "Verifica que tus datos formen correctamente una matriz de contingencia apropiada. Si no se actualiza la matriz, revisa tus datos.",
-                                                                  "",
-                                                                  actionButton("CheckDataMcNemar", "Checar datos"),
-                                                                  matrixInput("McNemarMatrixDatos", value = matrix(rep(NA,4), 2, 2, dimnames = list(c("Antes 0", "Antes 1"), c("Después 0", "Después 1"))),
-                                                                              rows = list(
-                                                                                # extend = TRUE,
-                                                                                names = TRUE),
-                                                                              class = "numeric",
-                                                                              cols = list(names = TRUE))
-                                                 )
-                                ),
-                                conditionalPanel(condition = "input.BinomialTest == 'Cox Stuart'",
-                                                 #CoxStuart---------------------------------------------------------------------------------------------------------------
-                                                 conditionalPanel(
-                                                   condition = "input.CSTestInput == 'Manual'",
-                                                   numericInput(inputId = "CSTGreater", label = "# de casos: $X_i<Y_i$", value = NA, min = 0),
-                                                   numericInput(inputId = "CSTLess", label = "# de casos: $X_i>Y_i$", value = NA, min = 0),
-                                                   selectInput(inputId = "CSTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                 ),
-                                                 conditionalPanel(
-                                                   condition = "input.CSTestInput == 'Datos'",
-                                                   "Tus datos deben ser numéricos",
-                                                   uiOutput("CSTPvar_1"),
-                                                   uiOutput("CSTPvar_2"),
-                                                   selectInput(inputId = "CSTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                 )
                                 ),
                                 #Pruebas de Rango-------------------------------------------------------------------
                                 conditionalPanel(
@@ -371,76 +371,137 @@ ui <- navbarPage(title = "TestApp",
                                              )
                                            )
                                     )
+                                  ),
+                                  #Paneles condicionales para cada prueba de Rangos---------------------------------------------------------------------------------------------
+                                  conditionalPanel(condition = "input.RangoTest == 'U-Mann-Whitney'",
+                                                   #U-Mann-Whitney---------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.U_Mann_WhitneyTestInput == 'Manual'",
+                                                     "Ingresa tus datos separados por coma para cada muestra",
+                                                     textInput("UMWS1","Muestra 1"),
+                                                     textInput("UMWS2","Muestra 2"),
+                                                     selectInput(inputId = "U_Mann_WhitneyTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.U_Mann_WhitneyTestInput == 'Datos'",
+                                                     uiOutput("U_Mann_WhitneyTPvar_1"),
+                                                     uiOutput("U_Mann_WhitneyTPvar_2"),
+                                                     selectInput(inputId = "U_Mann_WhitneyTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   )
+                                  ),
+                                  conditionalPanel(condition = "input.RangoTest == 'Signed-Rank'",
+                                                   #Signed-Rank---------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.Signed_RankTestInput == 'Manual'",
+                                                     "Ingresa tus datos separados por coma para cada muestra",
+                                                     textInput("SRS1","Muestra 1"),
+                                                     textInput("SRS2","Muestra 2"),
+                                                     selectInput(inputId = "Signed_RankTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.Signed_RankTestInput == 'Datos'",
+                                                     uiOutput("Signed_RankTPvar_1"),
+                                                     uiOutput("Signed_RankTPvar_2"),
+                                                     selectInput(inputId = "Signed_RankTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   )
+                                  ),
+                                  conditionalPanel(condition = "input.RangoTest == 'Kruskal-Wallis'",
+                                                   #Kruskal-Wallis------------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.Kruskal_WallisTestInput == 'Manual'",
+                                                     textInput("KWS","Observaciones"),
+                                                     textInput("KWG","Grupos")
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.Kruskal_WallisTestInput == 'Datos'",
+                                                     uiOutput("Kruskal_WallisTPvar_1"),
+                                                     uiOutput("Kruskal_WallisTPvar_2")
+                                                   )
+                                  ),
+                                  conditionalPanel(condition = "input.RangoTest == 'Friedman'",
+                                                   #Friedman---------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.FriedmanTestInput == 'Manual'",
+                                                     textInput("FriedmanS","Observaciones"),
+                                                     textInput("FriedmanG","Grupos")
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.FriedmanTestInput == 'Datos'",
+                                                     uiOutput("FriedmanTPvar_1"),
+                                                     uiOutput("FriedmanTPvar_2")
+                                                   )
                                   )
-                                ),
-                                #Paneles condicionales para cada prueba de Rangos---------------------------------------------------------------------------------------------
-                                conditionalPanel(condition = "input.RangoTest == 'U-Mann-Whitney'",
-                                                 #U-Mann-Whitney---------------------------------------------------------------------------------------------------------------
-                                                 conditionalPanel(
-                                                   condition = "input.U_Mann_WhitneyTestInput == 'Manual'",
-                                                   "Ingresa tus datos separados por coma para cada muestra",
-                                                   textInput("UMWS1","Muestra 1"),
-                                                   textInput("UMWS2","Muestra 2"),
-                                                   selectInput(inputId = "U_Mann_WhitneyTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                 ),
-                                                 conditionalPanel(
-                                                   condition = "input.U_Mann_WhitneyTestInput == 'Datos'",
-                                                   uiOutput("U_Mann_WhitneyTPvar_1"),
-                                                   uiOutput("U_Mann_WhitneyTPvar_2"),
-                                                   selectInput(inputId = "U_Mann_WhitneyTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                 )
-                                ),
-                                conditionalPanel(condition = "input.RangoTest == 'Signed-Rank'",
-                                                 #Signed-Rank---------------------------------------------------------------------------------------------------------------
-                                                 conditionalPanel(
-                                                   condition = "input.Signed_RankTestInput == 'Manual'",
-                                                   "Ingresa tus datos separados por coma para cada muestra",
-                                                   textInput("SRS1","Muestra 1"),
-                                                   textInput("SRS2","Muestra 2"),
-                                                   selectInput(inputId = "Signed_RankTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                 ),
-                                                 conditionalPanel(
-                                                   condition = "input.Signed_RankTestInput == 'Datos'",
-                                                   uiOutput("Signed_RankTPvar_1"),
-                                                   uiOutput("Signed_RankTPvar_2"),
-                                                   selectInput(inputId = "Signed_RankTestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
-                                                 )
-                                ),
-                                conditionalPanel(condition = "input.RangoTest == 'Kruskal-Wallis'",
-                                                 #Kruskal-Wallis------------------------------------------------------------------------------------------------------------------
-                                                 conditionalPanel(
-                                                   condition = "input.Kruskal_WallisTestInput == 'Manual'",
-                                                   textInput("KWS","Observaciones"),
-                                                   textInput("KWG","Grupos")
-                                                 ),
-                                                 conditionalPanel(
-                                                   condition = "input.Kruskal_WallisTestInput == 'Datos'",
-                                                   uiOutput("Kruskal_WallisTPvar_1"),
-                                                   uiOutput("Kruskal_WallisTPvar_2")
-                                                 )
-                                ),
-                                conditionalPanel(condition = "input.RangoTest == 'Friedman'",
-                                                 #Friedman---------------------------------------------------------------------------------------------------------------
-                                                 conditionalPanel(
-                                                   condition = "input.FriedmanTestInput == 'Manual'"
-                                                 ),
-                                                 conditionalPanel(
-                                                   condition = "input.FriedmanTestInput == 'Datos'"
-                                                 )
                                 ),
                                 #Pruebas de varianza----------------------------------------------------------------
                                 conditionalPanel(
                                   condition = "input.NParametricTest == 'Varianzas'",
-                                  radioGroupButtons(
-                                    selected = NA,
-                                    inputId = "VarianzasTest",
-                                    label = NULL, 
-                                    direction = "vertical",
-                                    choices = c("Fisher", ">2"),
-                                    status = "btn btn-info"
+                                  fluidRow(
+                                    column(width = 5,
+                                           radioGroupButtons(
+                                             selected = NA,
+                                             inputId = "VarianzasTest",
+                                             label = "Test de rangos al cuadrado para varianzas", 
+                                             direction = "vertical",
+                                             choices = c("2 Poblaciones", ">2 Poblaciones"),
+                                             status = "btn btn-info"
+                                           )
+                                    ),
+                                    column(width = 7,
+                                           #Squared Rank Test for Variances 2-------------------------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.VarianzasTest == '2 Poblaciones'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "SRTFV2TestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             )
+                                             
+                                           ),
+                                           #Squared Rank Test for Variances +2-------------------------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.VarianzasTest == '>2 Poblaciones'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "SRTFVM2TestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             )
+                                           )
+                                    )
+                                  ),
+                                  #Paneles condicionales para cada prueba de varianzas---------------------------------------------------------------------------------------------
+                                  conditionalPanel(condition = "input.VarianzasTest == '2 Poblaciones'",
+                                                   #Squared Rank Test for Variances 2---------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.SRTFV2TestInput == 'Manual'",
+                                                     textInput("SRTFV2S","Observaciones"),
+                                                     textInput("SRTFV2G","Grupos")
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.SRTFV2TestInput == 'Datos'",
+                                                     uiOutput("SRTFV2TPvar_1"),
+                                                     uiOutput("SRTFV2TPvar_2")
+                                                   )
+                                  ),
+                                  conditionalPanel(condition = "input.VarianzasTest == '>2 Poblaciones'",
+                                                   #Squared Rank Test for Variances +2---------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.SRTFVM2TestInput == 'Manual'",
+                                                     textInput("SRTFVM2S","Observaciones"),
+                                                     textInput("SRTFVM2G","Grupos")
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.VarianzasTest == 'Datos'",
+                                                     uiOutput("SRTFVM2TPvar_1"),
+                                                     uiOutput("SRTFVM2TPvar_2")
+                                                   )
                                   )
                                 )
                               ),
+                              #Metadata de la aplicación----------------------------------------------------------------------------
                               hr(),
                               tags$head(
                                 tags$link(rel="stylesheet", 
@@ -555,6 +616,10 @@ ui <- navbarPage(title = "TestApp",
                                                                  conditionalPanel(
                                                                    condition = "input.NParametricTest == 'Rango'  & input.RangoTest == 'Kruskal-Wallis'",
                                                                    verbatimTextOutput("severalComparisonKW")
+                                                                 ),
+                                                                 conditionalPanel(
+                                                                   condition = "input.NParametricTest == 'Rango'  & input.RangoTest == 'Friedman'",
+                                                                   verbatimTextOutput("severalComparisonF")
                                                                  )
                                                           )
                                                           
@@ -1458,6 +1523,7 @@ server <- function(input, output, session) {
     plotis_NP$plot
   }, bg="transparent")
 
+    #Kruskal-Wallis multiple comparisons-------------------------------------------------------
   output$severalComparisonKW <- renderPrint({
     validate(need(input$Kruskal_WallisTestInput, "Aquí se mostraran comparaciones múltiples"))
     if(input$Kruskal_WallisTestInput == "Datos"){
@@ -1468,10 +1534,26 @@ server <- function(input, output, session) {
     if(input$Kruskal_WallisTestInput == "Manual"){
       validate(need(input$KWS , "Aquí se mostraran comparaciones múltiples"))
       validate(need(input$KWG , "Aquí se mostraran comparaciones múltiples"))
-      x <- as.numeric(str_extract_all(input$KWS, pattern = "\\d+")[[1]])
+      x <- as.numeric(str_extract_all(input$KWS, pattern = "[\\d|\\d\\.]+")[[1]])
       g <- str_extract_all(input$KWG, pattern = "[^\\s|,]+")[[1]]
     }
     pairwise.wilcox.test(x, g)
+  })
+   #Friedman multiple comparisons--------------------------------------------------------------
+  output$severalComparisonF <- renderPrint({
+    validate(need(input$FriedmanTestInput, "Aquí se mostraran comparaciones múltiples"))
+    if(input$FriedmanTestInput == "Datos"){
+      req(input$file)
+      x <- data()[[input$FriedmanTPvar_1_aux]]
+      g <- data()[[input$FriedmanTPvar_2_aux]]
+    }
+    if(input$FriedmanTestInput == "Manual"){
+      validate(need(input$FriedmanS , "Aquí se mostraran comparaciones múltiples"))
+      validate(need(input$FriedmanG , "Aquí se mostraran comparaciones múltiples"))
+      x <- as.numeric(str_extract_all(input$FriedmanS, pattern = "[\\d|\\d\\.]+")[[1]])
+      g <- str_extract_all(input$FriedmanG, pattern = "[^\\s|,]+")[[1]]
+    }
+    #pairwise.wilcox.test(x, g)
   })
   
   #Carga de datos-------------------------------------------------------------------------------------------
@@ -1719,6 +1801,23 @@ server <- function(input, output, session) {
       validate()
     }else{
       selectInput("Kruskal_WallisTPvar_2_aux",label = "Selecciona la variable que indicará los grupos de tus observaciones",  choices = names(data()) %rc% input$Kruskal_WallisTPvar_1_aux)
+    }
+  })
+  #Friedman
+  output$FriedmanTPvar_1 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate("Se necesitan al menos dos variables para esta prueba")
+    }else{
+      selectInput("FriedmanTPvar_1_aux",label = "Selecciona las observaciones",  choices = names(data()))
+    }
+  })
+  output$FriedmanTPvar_2 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate()
+    }else{
+      selectInput("FriedmanTPvar_2_aux",label = "Selecciona la variable que indicará los grupos de tus observaciones",  choices = names(data()) %rc% input$FriedmanTPvar_1_aux)
     }
   })
   #Summary de las pruebas----------------------------------------------------------------
@@ -2285,7 +2384,7 @@ server <- function(input, output, session) {
           validate(need(input$KWS , "Ingresa todos los datos separados por coma"))
           validate(need(input$KWG , "Ingresa el grupo perteneciente de cada observación"))
           #Obtenemos los datos de las muestras
-          x <- as.numeric(str_extract_all(input$KWS, pattern = "\\d+")[[1]])
+          x <- as.numeric(str_extract_all(input$KWS, pattern = "[\\d|\\d\\.]+")[[1]])
           g <- str_extract_all(input$KWG, pattern = "[^\\s|,]+")[[1]]
           #Prueba
           prueba <- kruskal.test(x = x, g = g)
