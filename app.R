@@ -14,6 +14,9 @@ library(ggpubr)
 
 #Algunos objetos iniciales
 mMcNemar <- matrix(rep(NA,4), 2, 2, dimnames = list(c("Antes 0", "Antes 1"), c("Después 0", "Después 1")))
+T2X2 <- matrix(rep(NA,4), 2, 2, dimnames = list(c("Población 1", "Población 2"), c("Clase 1", "Clase 2")))
+IndMatrixInit <- matrix(rep(NA,4), 2, 2, dimnames = list(c("R1", "R2"), c("C1", "C2")))
+CTRXCMatrixInit <- matrix(rep(NA,4), 2, 2, dimnames = list(c("R1", "R2"), c("C1", "C2")))
 #ui-----------------------------------------------------------------------------------------------------------
 ui <- navbarPage(title = "TestApp", 
                  theme = "styles.css",
@@ -123,7 +126,7 @@ ui <- navbarPage(title = "TestApp",
                                   selected = NA,
                                   inputId = "NParametricTest",
                                   label = "Prueba", 
-                                  choices = c("Binomial", "Rango", "Varianzas"),
+                                  choices = c("Binomial", "Rango", "Varianzas", "Tablas de Contingencia"),
                                   status = "primary"
                                 ),
                                 #Pruebas binomiales-----------------------------------------------------------------
@@ -456,8 +459,11 @@ ui <- navbarPage(title = "TestApp",
                                                label = "Elige la forma de aplicar la prueba",
                                                choices = c("Manual", "Datos"),
                                                status = "btn btn-info"
-                                             )
-                                             
+                                             ),
+                                             "En caso de tener muestras pequeñas; ¿Deseas obtener p-values exactos?",
+                                             checkboxInput("SRTFV2ExactPV", label = NULL, value = F),
+                                             "¿Conoces al menos una de las medias de tus poblaciones?",
+                                             checkboxInput("SRTFV2ExactMediasK", label = NULL, value = F)
                                            ),
                                            #Squared Rank Test for Variances +2-------------------------------------------------------------------
                                            conditionalPanel(
@@ -468,7 +474,9 @@ ui <- navbarPage(title = "TestApp",
                                                label = "Elige la forma de aplicar la prueba",
                                                choices = c("Manual", "Datos"),
                                                status = "btn btn-info"
-                                             )
+                                             ),
+                                             "¿Conoces al menos una de las medias de tus poblaciones?",
+                                             checkboxInput("SRTFVM2ExactMediasK", label = NULL, value = F)
                                            )
                                     )
                                   ),
@@ -477,13 +485,25 @@ ui <- navbarPage(title = "TestApp",
                                                    #Squared Rank Test for Variances 2---------------------------------------------------------------------------------------------------------------
                                                    conditionalPanel(
                                                      condition = "input.SRTFV2TestInput == 'Manual'",
-                                                     textInput("SRTFV2S","Observaciones"),
-                                                     textInput("SRTFV2G","Grupos")
+                                                     textInput("SRTFV2S1","Muestra 1"),
+                                                     textInput("SRTFV2S2","Muestra 2"),
+                                                     selectInput(inputId = "SRTFV2TestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided'),
+                                                     conditionalPanel(
+                                                       condition = "input.SRTFV2ExactMediasK",
+                                                       textInput("SRTFV2M1M","Media de la primera muestra"),
+                                                       textInput("SRTFV2M2M","Media de la segunda muestra")
+                                                     )
                                                    ),
                                                    conditionalPanel(
                                                      condition = "input.SRTFV2TestInput == 'Datos'",
                                                      uiOutput("SRTFV2TPvar_1"),
-                                                     uiOutput("SRTFV2TPvar_2")
+                                                     uiOutput("SRTFV2TPvar_2"),
+                                                     selectInput(inputId = "SRTFV2TestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided'),
+                                                     conditionalPanel(
+                                                       condition = "input.SRTFV2ExactMediasK",
+                                                       textInput("SRTFV2M1D","Media de la primera muestra"),
+                                                       textInput("SRTFV2M2D","Media de la segunda muestra")
+                                                     )
                                                    )
                                   ),
                                   conditionalPanel(condition = "input.VarianzasTest == '>2 Poblaciones'",
@@ -491,15 +511,199 @@ ui <- navbarPage(title = "TestApp",
                                                    conditionalPanel(
                                                      condition = "input.SRTFVM2TestInput == 'Manual'",
                                                      textInput("SRTFVM2S","Observaciones"),
-                                                     textInput("SRTFVM2G","Grupos")
+                                                     textInput("SRTFVM2G","Grupos"),
+                                                     conditionalPanel(
+                                                       condition = "input.SRTFVM2ExactMediasK",
+                                                       textInput("SRTFVM2MediasM","Medias")
+                                                     )
                                                    ),
                                                    conditionalPanel(
                                                      condition = "input.VarianzasTest == 'Datos'",
                                                      uiOutput("SRTFVM2TPvar_1"),
-                                                     uiOutput("SRTFVM2TPvar_2")
+                                                     uiOutput("SRTFVM2TPvar_2"),
+                                                     conditionalPanel(
+                                                       condition = "input.SRTFVM2ExactMediasK",
+                                                       textInput("SRTFVM2MediasD","Medias")
+                                                     )
+                                                   )
+                                  )
+                                ),
+                                #Tablas de contingencia----------------------------------------------------------------
+                                conditionalPanel(
+                                  condition = "input.NParametricTest == 'Tablas de Contingencia'",
+                                  fluidRow(
+                                    column(width = 5,
+                                           radioGroupButtons(
+                                             selected = NA,
+                                             inputId = "ContingencyTest",
+                                             label = NULL, 
+                                             direction = "vertical",
+                                             choices = c("2X2", "Independencia", "RXC", "Mediana"),
+                                             status = "btn btn-info"
+                                           )
+                                    ),
+                                    column(width = 7,
+                                           #Chi-squared test for Differences in probabilities, 2X2-------------------------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.ContingencyTest == '2X2'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "CT2X2TestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             )
+                                           ),
+                                           #Independence Test------------------------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.ContingencyTest == 'Independencia'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "CTIndTestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             )
+                                           ),
+                                           #Chi-squared test for Differences in probabilities, RXC-----------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.ContingencyTest == 'RXC'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "CTRXCTestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             )
+                                           ),
+                                           #Median test-------------------------------------------------------------------------------------
+                                           conditionalPanel(
+                                             condition = "input.ContingencyTest == 'Mediana'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "CTMedianTestInput",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             )
+                                           )
+                                    )
+                                  ),
+                                  #Paneles condicionales para cada prueba de tablas de contingencia---------------------------------------------------------------------------------------------
+                                  conditionalPanel(condition = "input.ContingencyTest == '2X2'",
+                                                   #Chi-squared test for Differences in probabilities 2X2--------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.CT2X2TestInput == 'Manual'",
+                                                     matrixInput("CT2X2MatrixManual", value = T2X2,
+                                                                 rows = list(names = TRUE),
+                                                                 class = "numeric",
+                                                                 cols = list(names = TRUE)),
+                                                     selectInput(inputId = "CT2X2TestKindOfTest1", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.CT2X2TestInput == 'Datos'",
+                                                     "Selecciona las variables que desees utilizar para crear la matriz de contingencia.",
+                                                     "Recuerda que los datos deben ser nominales con las mismas 2 categorías en cada variable, por lo que si ingresas valores numéricos, se tomarán como factores de a lo más dos niveles.",
+                                                     uiOutput("CT2X2TPvar_1"),
+                                                     uiOutput("CT2X2TPvar_2"),
+                                                     "Verifica que tus datos formen correctamente una matriz de contingencia apropiada. Si no se actualiza la matriz, revisa tus datos.",
+                                                     "",
+                                                     actionButton("CheckDataCT2X2", "Checar datos"),
+                                                     matrixInput("CT2X2MatrixDatos", value = matrix(rep(NA,4), 2, 2, dimnames = list(c("Población 1", "Población 2"), c("Clase 1", "Clase 2"))),
+                                                                 rows = list(
+                                                                   # extend = TRUE,
+                                                                   names = TRUE),
+                                                                 class = "numeric",
+                                                                 cols = list(names = TRUE)),
+                                                     selectInput(inputId = "CT2X2TestKindOfTest2", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   )
+                                  ),
+                                  conditionalPanel(condition = "input.ContingencyTest == 'Independencia'",
+                                                   #Independence Test---------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.CTIndTestInput == 'Manual'",
+                                                     "Selecciona la dimensión de tu matriz y depués haz click en 'Generar matriz'",
+                                                     fluidRow(
+                                                       column(width = 6,
+                                                              numericInput(value = NA, label = "Cantidad de renglones", inputId = "RowsIndTestM"),
+                                                              numericInput(value = NA, label = "Cantidad de columnas", inputId = "ColsIndTestM")
+                                                       ),
+                                                       column(width = 6,
+                                                              actionButton("generateMatrixInd", "Generar matriz"))
+                                                     ),
+                                                     fluidRow(
+                                                       column(width = 6,
+                                                              "Para evitar problemas de diseño, puedes ver tu matriz presionando siguiente boton. Automáticamente se genera una matriz de 2X2"),
+                                                       column(width = 6,
+                                                              dropdownButton(
+                                                                matrixInput("IndTestsMatrixDatos", value = IndMatrixInit,
+                                                                            class = "numeric",
+                                                                            rows = list(names = TRUE),
+                                                                            cols = list(names = TRUE)
+                                                                ),
+                                                                circle = FALSE, status = "primary",
+                                                                icon = icon("table"), width = "1000px"
+                                                              ))
+                                                     )
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.CTIndTestInput == 'Datos'",
+                                                     
+                                                   )
+                                  ),
+                                  conditionalPanel(condition = "input.ContingencyTest == 'RXC'",
+                                                   #Chi-squared test for Differences in probabilities RXC---------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.CTRXCTestInput == 'Manual'",
+                                                     "Selecciona la dimensión de tu matriz y depués haz click en 'Generar matriz'",
+                                                     fluidRow(
+                                                       column(width = 6,
+                                                              numericInput(value = NA, label = "Cantidad de renglones", inputId = "RowsCTRXCTestM"),
+                                                              numericInput(value = NA, label = "Cantidad de columnas", inputId = "ColsCTRXCTestM")
+                                                       ),
+                                                       column(width = 6,
+                                                              actionButton("generateMatrixCTRXC", "Generar matriz"))
+                                                     ),
+                                                     fluidRow(
+                                                       column(width = 6,
+                                                              "Para evitar problemas de diseño, puedes ver tu matriz presionando siguiente boton. Automáticamente se genera una matriz de 2X2"),
+                                                       column(width = 6,
+                                                              dropdownButton(
+                                                                matrixInput("CTRXCMatrixDatos", value = CTRXCMatrixInit,
+                                                                            class = "numeric",
+                                                                            rows = list(names = TRUE),
+                                                                            cols = list(names = TRUE)
+                                                                ),
+                                                                circle = FALSE, status = "primary",
+                                                                icon = icon("table"), width = "1000px"
+                                                              ))
+                                                     )
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.CTRXCTestInput == 'Datos'",
+                            
+                                                   )
+                                  ),
+                                  conditionalPanel(condition = "input.ContingencyTest == 'Mediana'",
+                                                   #Median test---------------------------------------------------------------------------------------------------------------
+                                                   conditionalPanel(
+                                                     condition = "input.CTMedianTestInput == 'Manual'",
+                                                     # matrixInput("CT2X2MatrixManual", value = T2X2,
+                                                     #             rows = list(
+                                                     #               # extend = TRUE,
+                                                     #               names = TRUE),
+                                                     #             class = "numeric",
+                                                     #             cols = list(names = TRUE))
+                                                   ),
+                                                   conditionalPanel(
+                                                     condition = "input.CTMedianTestInput == 'Datos'",
+          
                                                    )
                                   )
                                 )
+                                
+                                
+                                
                               ),
                               #Metadata de la aplicación----------------------------------------------------------------------------
                               hr(),
@@ -563,7 +767,7 @@ ui <- navbarPage(title = "TestApp",
                                            TTestHyp, ZTestHyp, ShapiroTestHyp),
                                          conditionalPanel(
                                            condition = "input.KindOfTest == 'No paramétrica'", 
-                                           BinomialTestHyp, RangoTestHyp)
+                                           BinomialTestHyp, RangoTestHyp, VarianceRankTestHyp, ContingencyTablesTestHyp)
                                        ),
                                        fluidRow(
                                          align = "center",
@@ -1608,7 +1812,7 @@ server <- function(input, output, session) {
   
   #Verificación para la selección de las variables para las pruebas paramétricas-------------------------
   
-  ##TTest
+  ##TTest-----------------
   output$TTest1 <- renderUI({
     req(input$file)
     if(dim(data())[2] < 1){
@@ -1633,7 +1837,7 @@ server <- function(input, output, session) {
       selectInput("TTest2_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$TTest2_1_aux)
     }
   })
-  ##ZTest
+  ##ZTest---------------------
   output$ZTest1 <- renderUI({
     req(input$file)
     if(dim(data())[2] < 1){
@@ -1658,7 +1862,7 @@ server <- function(input, output, session) {
       selectInput("ZTest2_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$ZTest2_1_aux)
     }
   })
-  ##Shapiro
+  ##Shapiro----------------------
   output$SWTest1 <- renderUI({
     req(input$file)
     if(dim(data())[2] < 1){
@@ -1667,7 +1871,7 @@ server <- function(input, output, session) {
       selectInput("SWTest1_aux",label = "Selecciona tu variable",  choices = names(data()))
     }
   })
-  #Binomial
+  #Binomial--------------------------
   output$BinomialTestVar <- renderUI({
     req(input$file)
     if(dim(data())[2] < 1){
@@ -1676,7 +1880,7 @@ server <- function(input, output, session) {
       selectInput("BinomialTestVar_aux",label = "Selecciona tu variable",  choices = names(data()))
     }
   })
-  #Cuantiles
+  #Cuantiles----------------------
   output$CuantilTPvar <- renderUI({
     req(input$file)
     if(dim(data())[2] < 1){
@@ -1685,7 +1889,7 @@ server <- function(input, output, session) {
       selectInput("CuantilTPvar_aux",label = "Selecciona tu variable",  choices = names(data()))
     }
   })
-  #Signos
+  #Signos--------------------------
   output$SigTPvar_1 <- renderUI({
     req(input$file)
     if(dim(data())[2] < 2){
@@ -1702,7 +1906,7 @@ server <- function(input, output, session) {
       selectInput("SigTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$SigTPvar_1_aux)
     }
   })
-  #McNemar
+  #McNemar---------------------------------
   output$McNemarTPvar_1 <- renderUI({
     req(input$file)
     if(dim(data())[2] < 2){
@@ -1719,7 +1923,7 @@ server <- function(input, output, session) {
       selectInput("McNemarTPvar_2_aux",label = NULL,  choices = names(data()) %rc% input$McNemarTPvar_1_aux)
     }
   })
-  #Actualización de la matriz McNemar
+  #Actualización de la matriz McNemar------------------------
   observeEvent({
     # req(input$file)
     # if (isTruthy(input$uno) && isTruthy(input$dos)) TRUE
@@ -1735,7 +1939,7 @@ server <- function(input, output, session) {
     m <- matrix(t, 2, 2, dimnames = list(c("Antes 0", "Antes 1"), c("Después 0", "Después 1")))
     updateMatrixInput(session = session, inputId = "McNemarMatrixDatos", value = m)
   })
-  #CoxStuart
+  #CoxStuart--------------------------
   output$CSTPvar_1 <- renderUI({
     req(input$file)
     if(dim(data())[2] < 2){
@@ -1752,7 +1956,7 @@ server <- function(input, output, session) {
       selectInput("CSTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$CSTPvar_1_aux)
     }
   })
-  #RankSumTest
+  #RankSumTest---------------------------
   output$U_Mann_WhitneyTPvar_1 <- renderUI({
     req(input$file)
     if(dim(data())[2] < 2){
@@ -1769,7 +1973,7 @@ server <- function(input, output, session) {
       selectInput("U_Mann_WhitneyTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$U_Mann_WhitneyTPvar_1_aux)
     }
   })
-  #SignedRankTest
+  #SignedRankTest---------------------
   output$Signed_RankTPvar_1 <- renderUI({
     req(input$file)
     if(dim(data())[2] < 2){
@@ -1786,7 +1990,7 @@ server <- function(input, output, session) {
       selectInput("Signed_RankTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$Signed_RankTPvar_1_aux)
     }
   })
-  #Kruskall-Wallis
+  #Kruskall-Wallis--------------------
   output$Kruskal_WallisTPvar_1 <- renderUI({
     req(input$file)
     if(dim(data())[2] < 2){
@@ -1803,7 +2007,7 @@ server <- function(input, output, session) {
       selectInput("Kruskal_WallisTPvar_2_aux",label = "Selecciona la variable que indicará los grupos de tus observaciones",  choices = names(data()) %rc% input$Kruskal_WallisTPvar_1_aux)
     }
   })
-  #Friedman
+  #Friedman--------------------------
   output$FriedmanTPvar_1 <- renderUI({
     req(input$file)
     if(dim(data())[2] < 2){
@@ -1820,6 +2024,61 @@ server <- function(input, output, session) {
       selectInput("FriedmanTPvar_2_aux",label = "Selecciona la variable que indicará los grupos de tus observaciones",  choices = names(data()) %rc% input$FriedmanTPvar_1_aux)
     }
   })
+  #Igualdad de varianzas por rangos (2 poblaciones)-------------------
+  output$SRTFVM2TPvar_1 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate("Se necesitan al menos dos variables para esta prueba")
+    }else{
+      selectInput("SRTFV2TPvar_1_aux",label = "Selecciona tu variable",  choices = names(data()))
+    }
+  })
+  output$SRTFVM2TPvar_2 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate()
+    }else{
+      selectInput("SRTFV2TPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$SRTFV2TPvar_1_aux)
+    }
+  })
+  
+  #Igualdad de varianzas por rangos (+2 poblaciones)-------------------
+  output$SRTFVM2TPvar_1 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate("Se necesitan al menos dos variables para esta prueba")
+    }else{
+      selectInput("SRTFVM2TPvar_1_aux",label = "Selecciona tu variable",  choices = names(data()))
+    }
+  })
+  output$SRTFVM2TPvar_2 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate()
+    }else{
+      selectInput("SRTFVM2TPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$SRTFVM2TPvar_1_aux)
+    }
+  })
+  
+  #Matrices para prueba de independencia--------------------------------------------------------------
+  observeEvent({
+    input$generateMatrixInd
+  }, {
+    r <- input$RowsIndTestM
+    c <- input$ColsIndTestM
+    m <- matrix(rep(NA,r*c), r, c, dimnames = list(paste("R", 1:r, sep = ""), paste("C", 1:c, sep = "")))
+    updateMatrixInput(session = session, inputId = "IndTestsMatrixDatos", value = m)
+  })
+  #Matrices para prueba Chi-squared test for Differences in probabilities RXC------------------------
+  observeEvent({
+    input$generateMatrixCTRXC
+  }, {
+    r <- input$RowsCTRXCTestM
+    c <- input$ColsCTRXCTestM
+    m <- matrix(rep(NA,r*c), r, c, dimnames = list(paste("R", 1:r, sep = ""), paste("C", 1:c, sep = "")))
+    updateMatrixInput(session = session, inputId = "CTRXCMatrixDatos", value = m)
+  })
+  
   #Summary de las pruebas----------------------------------------------------------------
   output$summaryP <- renderPrint({
     req(input$file)
@@ -1898,7 +2157,7 @@ server <- function(input, output, session) {
     isolate(Proves$test)
   })
   output$summaryNP <- renderPrint({
-    validate(need(input$NParametricTest %in% c("Binomial", "Rango", "Varianzas"), "Selecciona un tipo de prueba No Paramétrica"))
+    validate(need(input$NParametricTest %in% c("Binomial", "Rango", "Varianzas", "Tablas de Contingencia"), "Selecciona un tipo de prueba No Paramétrica"))
     if(input$NParametricTest == "Binomial"){
       validate(need(input$BinomialTest %in% c("Proporciones", "Cuantiles", "Signos", "McNemar","Cox Stuart"), "Selecciona un tipo de prueba Binomial"))
       if(input$BinomialTest == "Proporciones"){
@@ -2400,9 +2659,170 @@ server <- function(input, output, session) {
       if(input$RangoTest == "Friedman"){}
     }
     if(input$NParametricTest == "Varianzas"){
-      validate(need(input$VarianzasTest %in% c("Fisher", ">2"), "Selecciona un tipo de prueba de varianza"))
-      if(input$VarianzasTest == "Fisher"){}
-      if(input$VarianzasTest == ">2"){} 
+      validate(need(input$VarianzasTest %in% c("2 Poblaciones", ">2 Poblaciones"), "Selecciona un tipo de prueba de varianza"))
+      if(input$VarianzasTest == "2 Poblaciones"){
+        validate(need(input$SRTFV2TestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$SRTFV2TestInput == "Datos"){
+          req(input$file)
+          x <- data()[[input$SRTFV2TPvar_1_aux]]
+          y <- data()[[input$SRTFV2TPvar_2_aux]]
+          #Prueba
+          prueba <- NULL
+          
+          mu1 <- NULL
+          mu2 <- NULL
+          if(input$SRTFV2ExactMediasK){
+            
+            aux_m1 <- str_extract_all(input$SRTFV2M1D, pattern = "[\\d|\\d\\.]+")[[1]]
+            aux_m2 <- str_extract_all(input$SRTFV2M2D, pattern = "[\\d|\\d\\.]+")[[1]]
+            
+            if(length(aux_m1)!=0){mu1 <- as.numeric(aux_m1)}
+            if(length(aux_m2)!=0){mu2 <- as.numeric(aux_m2)}
+          }
+          
+          if(input$SRTFV2ExactPV){
+            prueba <- rank_var_2(m1 = x, m2 = y, alternative = input$SRTFV2TestKindOfTestD,	significance = input$alphaTest, mu1 = mu1, mu2 = mu2, exact.pval = TRUE)
+          }else{
+            prueba <- rank_var_2(m1 = x, m2 = y, alternative = input$SRTFV2TestKindOfTestD,	significance = input$alphaTest, mu1 = mu1, mu2 = mu2)
+          }
+          Proves$test <- prueba
+          #Estadístico
+          Proves$statistical <- prueba$statistic
+          #P-value
+          Proves$p_value <- prueba$p.value
+          #Cuantil
+          Proves$cuantil <- prueba$interval
+        }
+        if(input$SRTFV2TestInput == "Manual"){
+          validate(need(input$SRTFV2S1 , "Ingresa los datos de tu primera muestra"))
+          validate(need(input$SRTFV2S2 , "Ingresa los datos de tu segunda muestra"))
+          #Obtenemos los datos de las muestras
+          x <- as.numeric(str_extract_all(input$SRTFV2S1, pattern = "\\d+")[[1]])
+          y <- as.numeric(str_extract_all(input$SRTFV2S2, pattern = "\\d+")[[1]])
+          #Prueba
+          prueba <- NULL
+          
+          mu1 <- NULL
+          mu2 <- NULL
+          if(input$SRTFV2ExactMediasK){
+            
+            aux_m1 <- str_extract_all(input$SRTFV2M1M, pattern = "[\\d|\\d\\.]+")[[1]]
+            aux_m2 <- str_extract_all(input$SRTFV2M2M, pattern = "[\\d|\\d\\.]+")[[1]]
+            
+            if(length(aux_m1)!=0){mu1 <- as.numeric(aux_m1)}
+            if(length(aux_m2)!=0){mu2 <- as.numeric(aux_m2)}
+          }
+          
+          if(input$SRTFV2ExactPV){
+            prueba <- rank_var_2(m1 = x, m2 = y, alternative = input$SRTFV2TestKindOfTestM,	significance = input$alphaTest, mu1 = mu1, mu2 = mu2, exact.pval = TRUE)
+          }else{
+            prueba <- rank_var_2(m1 = x, m2 = y, alternative = input$SRTFV2TestKindOfTestM,	significance = input$alphaTest, mu1 = mu1, mu2 = mu2)
+          }
+          Proves$test <- prueba
+          #Estadístico
+          Proves$statistical <- prueba$statistic
+          #P-value
+          Proves$p_value <- prueba$p.value
+          #Cuantil
+          Proves$cuantil <- prueba$interval
+        }
+      }
+      if(input$VarianzasTest == ">2 Poblaciones"){
+        validate(need(input$SRTFVM2TestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$SRTFVM2TestInput == "Datos"){
+          req(input$file)
+          x <- data()[[input$SRTFVM2TPvar_1_aux]]
+          y <- data()[[input$SRTFVM2TPvar_2_aux]]
+          #Prueba
+          medias <- NULL
+          if(input$SRTFVM2ExactMediasK){
+            medias <- as.numeric(str_extract_all(input$SRTFVM2MediasD, pattern = "[\\d|\\d\\.]+")[[1]])
+          }
+          prueba <- rankVar.test(m = x, g = y, mu = medias, significance = input$alphaTest)
+          Proves$test <- prueba
+          #Estadístico
+          Proves$statistical <- prueba$statistic
+          #P-value
+          Proves$p_value <- prueba$p.value
+          #Cuantil
+          Proves$cuantil <- prueba$interval
+        }
+        if(input$SRTFVM2TestInput == "Manual"){
+          validate(need(input$SRTFVM2S , "Ingresa las observaciones"))
+          validate(need(input$SRTFVM2G , "Ingresa la segregación de las observaciones"))
+          #Obtenemos los datos de las muestras
+          x <- as.numeric(str_extract_all(input$SRTFVM2S, pattern = "[\\d|\\d\\.]+")[[1]])
+          y <- str_extract_all(input$SRTFVM2G, pattern = "[^\\s|,]+")[[1]]
+          #Prueba
+          medias <- NULL
+          if(input$SRTFVM2ExactMediasK){
+            medias <- as.numeric(str_extract_all(input$SRTFVM2MediasM, pattern = "[\\d|\\d\\.]+")[[1]])
+          }
+          prueba <- rankVar.test(m = x, g = y, mu = medias, significance = input$alphaTest)
+          Proves$test <- prueba
+          #Estadístico
+          Proves$statistical <- prueba$statistic
+          #P-value
+          Proves$p_value <- prueba$p.value
+          #Cuantil
+          Proves$cuantil <- prueba$interval
+        }
+      } 
+    }
+    if(input$NParametricTest == "Tablas de Contingencia"){
+      validate(need(input$ContingencyTest %in% c("2X2", "Independencia", "RXC", "Mediana"), "Selecciona un tipo de prueba de varianza"))
+      if(input$ContingencyTest == "2X2"){
+        validate(need(input$CT2X2TestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$CT2X2TestInput == "Datos"){
+          req(input$file)
+        }
+        if(input$CT2X2TestInput == "Manual"){
+          validate(verify_matrix(input$CT2X2MatrixManual))
+          prueba <- CSDP2X2.test(input$CT2X2MatrixManual, alternative = input$CT2X2TestKindOfTest1, significance = input$alphaTest)
+          Proves$test <- prueba
+          Proves$statistical <- prueba$statistic
+          Proves$cuantil <- prueba$interval
+          Proves$p_value <- prueba$p.value
+        }
+      }
+      if(input$ContingencyTest == "Independencia"){
+        validate(need(input$CTIndTestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$CTIndTestInput == "Datos"){
+          req(input$file)
+        }
+        if(input$CTIndTestInput == "Manual"){
+          validate(verify_matrix(input$IndTestsMatrixDatos))
+          prueba <- chisq.test(input$IndTestsMatrixDatos)
+          Proves$test <- prueba
+          Proves$statistical <- prueba$statistic
+          Proves$cuantil <- qchisq(1-input$alphaTest, df = prueba$parameter)
+          Proves$p_value <- prueba$p.value
+        }
+      }
+      if(input$ContingencyTest == "RXC"){
+        validate(need(input$CTRXCTestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$CTRXCTestInput == "Datos"){
+          req(input$file)
+        }
+        if(input$CTRXCTestInput == "Manual"){
+          validate(verify_matrix(input$CTRXCMatrixDatos))
+          prueba <- chisq.test(input$CTRXCMatrixDatos)
+          Proves$test <- prueba
+          Proves$statistical <- prueba$statistic
+          Proves$cuantil <- qchisq(1-input$alphaTest, df = prueba$parameter)
+          Proves$p_value <- prueba$p.value
+        }
+      }
+      if(input$ContingencyTest == "Mediana"){
+        validate(need(input$CTMedianTestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$CTMedianTestInput == "Datos"){
+          req(input$file)
+        }
+        if(input$CTMedianTestInput == "Manual"){
+          #validate(need(input$SRTFVM2S , "Ingresa las observaciones"))
+          #validate(need(input$SRTFVM2G , "Ingresa la segregación de las observaciones"))
+        }
+      }
     }
     isolate(Proves$test)
   })
