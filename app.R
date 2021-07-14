@@ -17,6 +17,7 @@ mMcNemar <- matrix(rep(NA,4), 2, 2, dimnames = list(c("Antes 0", "Antes 1"), c("
 T2X2 <- matrix(rep(NA,4), 2, 2, dimnames = list(c("Población 1", "Población 2"), c("Clase 1", "Clase 2")))
 IndMatrixInit <- matrix(rep(NA,4), 2, 2, dimnames = list(c("R1", "R2"), c("C1", "C2")))
 CTRXCMatrixInit <- matrix(rep(NA,4), 2, 2, dimnames = list(c("R1", "R2"), c("C1", "C2")))
+CTMedianMatrixInit <- matrix(rep(NA,4), 2, 2, dimnames = list(c("R1", "R2"), c("C1", "C2")))
 #ui-----------------------------------------------------------------------------------------------------------
 ui <- navbarPage(title = "TestApp", 
                  theme = "styles.css",
@@ -622,7 +623,7 @@ ui <- navbarPage(title = "TestApp",
                                                    #Independence Test---------------------------------------------------------------------------------------------------------------
                                                    conditionalPanel(
                                                      condition = "input.CTIndTestInput == 'Manual'",
-                                                     "Selecciona la dimensión de tu matriz y depués haz click en 'Generar matriz'",
+                                                     "Determina la dimensión de tu matriz y depués haz click en 'Generar matriz'",
                                                      fluidRow(
                                                        column(width = 6,
                                                               numericInput(value = NA, label = "Cantidad de renglones", inputId = "RowsIndTestM"),
@@ -655,7 +656,7 @@ ui <- navbarPage(title = "TestApp",
                                                    #Chi-squared test for Differences in probabilities RXC---------------------------------------------------------------------------------------------------------------
                                                    conditionalPanel(
                                                      condition = "input.CTRXCTestInput == 'Manual'",
-                                                     "Selecciona la dimensión de tu matriz y depués haz click en 'Generar matriz'",
+                                                     "Determina la dimensión de tu matriz y depués haz click en 'Generar matriz'",
                                                      fluidRow(
                                                        column(width = 6,
                                                               numericInput(value = NA, label = "Cantidad de renglones", inputId = "RowsCTRXCTestM"),
@@ -688,12 +689,28 @@ ui <- navbarPage(title = "TestApp",
                                                    #Median test---------------------------------------------------------------------------------------------------------------
                                                    conditionalPanel(
                                                      condition = "input.CTMedianTestInput == 'Manual'",
-                                                     # matrixInput("CT2X2MatrixManual", value = T2X2,
-                                                     #             rows = list(
-                                                     #               # extend = TRUE,
-                                                     #               names = TRUE),
-                                                     #             class = "numeric",
-                                                     #             cols = list(names = TRUE))
+                                                     "Determina la cantidad de muestras y depués haz click en 'Generar matriz'",
+                                                     fluidRow(
+                                                       column(width = 6,
+                                                              numericInput(value = NA, label = "Cantidad de muestras", inputId = "CTMedianTestM"),
+                                                       ),
+                                                       column(width = 6,
+                                                              actionButton("generateMatrixCTMedian", "Generar matriz"))
+                                                     ),
+                                                     fluidRow(
+                                                       column(width = 6,
+                                                              "Para evitar problemas de diseño, puedes ver tu matriz presionando siguiente boton. Automáticamente se genera una matriz de 2X2"),
+                                                       column(width = 6,
+                                                              dropdownButton(
+                                                                matrixInput("CTMedianMatrixDatos", value = CTMedianMatrixInit,
+                                                                            class = "numeric",
+                                                                            rows = list(names = TRUE),
+                                                                            cols = list(names = TRUE)
+                                                                ),
+                                                                circle = FALSE, status = "primary",
+                                                                icon = icon("table"), width = "1000px"
+                                                              ))
+                                                     )
                                                    ),
                                                    conditionalPanel(
                                                      condition = "input.CTMedianTestInput == 'Datos'",
@@ -861,11 +878,17 @@ ui <- navbarPage(title = "TestApp",
                                            condition = "input.NParametricTest == 'Rango'",
                                            h4(textOutput("headerDescriptionNPTR")),
                                            textOutput("DescriptionNPTR"),
+                                         ),
+                                         conditionalPanel(
+                                           condition = "input.NParametricTest == 'Varianzas'",
+                                           h4(textOutput("headerDescriptionNPTVar")),
+                                           textOutput("DescriptionNPTVar"),
+                                         ),
+                                         conditionalPanel(
+                                           condition = "input.NParametricTest == 'Tablas de Contingencia'",
+                                           h4(textOutput("headerDescriptionNPTCT")),
+                                           textOutput("DescriptionNPTCT"),
                                          )
-                                         
-                                         
-                                         
-                                         
                                        )
                                 )
                               )
@@ -918,6 +941,14 @@ server <- function(input, output, session) {
     req(input$RangoTest)
     input$RangoTest
   })
+  output$headerDescriptionNPTVar <- renderText({
+    req(input$VarianzasTest)
+    input$VarianzasTest
+  })
+  output$headerDescriptionNPTCT <- renderText({
+    req(input$ContingencyTest)
+    input$ContingencyTest
+  })
   
   #Descripción
   output$DescriptionPT <- renderText({
@@ -932,8 +963,15 @@ server <- function(input, output, session) {
     req(input$RangoTest)
     description_test_PB(input$RangoTest)
   })
-  
-  
+  output$DescriptionNPTVar <- renderText({
+    req(input$VarianzasTest)
+    description_test_PB(input$VarianzasTest)
+  })
+  output$DescriptionNPTCT <- renderText({
+    req(input$ContingencyTest)
+    description_test_PB(input$ContingencyTest)
+  })
+
   
   #Gráficas y tablas-------------------------------------------------------------------------------------------------
   plot_P <- reactive({
@@ -2078,6 +2116,16 @@ server <- function(input, output, session) {
     m <- matrix(rep(NA,r*c), r, c, dimnames = list(paste("R", 1:r, sep = ""), paste("C", 1:c, sep = "")))
     updateMatrixInput(session = session, inputId = "CTRXCMatrixDatos", value = m)
   })
+  #Matrices para prueba Chi-squared test for Median---------------------------------------
+  observeEvent({
+    input$generateMatrixCTMedian
+  }, {
+    c <- input$CTMedianTestM
+    m <- matrix(rep(NA,2*c), 2, c, dimnames = list(c("> Mediana", "<= Mediana"), paste("M", 1:c, sep = "")))
+    updateMatrixInput(session = session, inputId = "CTMedianMatrixDatos", value = m)
+  })
+  
+  
   
   #Summary de las pruebas----------------------------------------------------------------
   output$summaryP <- renderPrint({
@@ -2819,8 +2867,12 @@ server <- function(input, output, session) {
           req(input$file)
         }
         if(input$CTMedianTestInput == "Manual"){
-          #validate(need(input$SRTFVM2S , "Ingresa las observaciones"))
-          #validate(need(input$SRTFVM2G , "Ingresa la segregación de las observaciones"))
+          validate(verify_matrix(input$CTMedianMatrixDatos))
+          prueba <- median.test(input$CTMedianMatrixDatos, significance = input$alphaTest)
+          Proves$test <- prueba
+          Proves$statistical <- prueba$statistic
+          Proves$cuantil <- prueba$interval
+          Proves$p_value <- prueba$p.value
         }
       }
     }

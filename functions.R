@@ -445,7 +445,7 @@ rankVar.test <- function(m, g, mu = NULL, significance = 0.05){
   
 }
 #Función para prueba Chi-squared test for Differences in probabilities 2X2--------------------------------------------------------------------------------
-CSDP2X2.test <- function(matriz,  alternative = "two.sided",	significance = 0.05){
+CSDP2X2.test <- function(matriz,	significance = 0.05){
   matriz <- addmargins(matriz)
   N <- matriz[3,3]
   O1 <- matriz[1,1]
@@ -484,6 +484,28 @@ CSDP2X2.test <- function(matriz,  alternative = "two.sided",	significance = 0.05
                p.value = as.numeric(p_val), 
                interval = c(q1, q2), 
                alternative = alternative, method = "Chi-squared test for Differences in probabilities 2X2", 
+               data.name = DNAME)
+  class(RVAL) <- "htest"
+  return(RVAL)
+}
+#Función para realizar prueba de la mediana---------------------------------------------------------
+median.test <- function(matriz, significance = 0.05){
+  matriz <- addmargins(matriz)
+  shape <- dim(matriz)
+  N <- matriz[shape[1],shape[2]]
+  a <- matriz[1,shape[2]]
+  b <- matriz[2,shape[2]]
+  est <- (N^2)/(a*b)*sum(matriz[1,1:(shape[2]-1)]^2/matriz[3,1:(shape[2]-1)]) - N*a/b
+  q <- qchisq(significance, lower.tail = F, df = (shape[2]-2))
+  p_val <- pchisq(est, lower.tail = F,  df = (shape[2]-2))
+  names(est) <- "T"
+  
+  DNAME <- "Different samples"
+  RVAL <- list(statistic = est,
+               parameter = (shape[2]-2),
+               p.value = as.numeric(p_val), 
+               interval = q, 
+               alternative = alternative, method = "Chi-squared test for Medians", 
                data.name = DNAME)
   class(RVAL) <- "htest"
   return(RVAL)
