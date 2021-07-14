@@ -599,16 +599,15 @@ ui <- navbarPage(title = "TestApp",
                                                                  rows = list(names = TRUE),
                                                                  class = "numeric",
                                                                  cols = list(names = TRUE)),
-                                                     selectInput(inputId = "CT2X2TestKindOfTest1", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                     selectInput(inputId = "CT2X2TestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
                                                    ),
                                                    conditionalPanel(
                                                      condition = "input.CT2X2TestInput == 'Datos'",
-                                                     "Selecciona las variables que desees utilizar para crear la matriz de contingencia.",
+                                                     "Selecciona las variables que desees utilizar como poblacciones para crear la matriz de contingencia.",
                                                      "Recuerda que los datos deben ser nominales con las mismas 2 categorías en cada variable, por lo que si ingresas valores numéricos, se tomarán como factores de a lo más dos niveles.",
                                                      uiOutput("CT2X2TPvar_1"),
                                                      uiOutput("CT2X2TPvar_2"),
                                                      "Verifica que tus datos formen correctamente una matriz de contingencia apropiada. Si no se actualiza la matriz, revisa tus datos.",
-                                                     "",
                                                      actionButton("CheckDataCT2X2", "Checar datos"),
                                                      matrixInput("CT2X2MatrixDatos", value = matrix(rep(NA,4), 2, 2, dimnames = list(c("Población 1", "Población 2"), c("Clase 1", "Clase 2"))),
                                                                  rows = list(
@@ -616,7 +615,7 @@ ui <- navbarPage(title = "TestApp",
                                                                    names = TRUE),
                                                                  class = "numeric",
                                                                  cols = list(names = TRUE)),
-                                                     selectInput(inputId = "CT2X2TestKindOfTest2", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                     selectInput(inputId = "CT2X2TestKindOfTestD", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
                                                    )
                                   ),
                                   conditionalPanel(condition = "input.ContingencyTest == 'Independencia'",
@@ -637,7 +636,7 @@ ui <- navbarPage(title = "TestApp",
                                                               "Para evitar problemas de diseño, puedes ver tu matriz presionando siguiente boton. Automáticamente se genera una matriz de 2X2"),
                                                        column(width = 6,
                                                               dropdownButton(
-                                                                matrixInput("IndTestsMatrixDatos", value = IndMatrixInit,
+                                                                matrixInput("IndTestsMatrixManual", value = IndMatrixInit,
                                                                             class = "numeric",
                                                                             rows = list(names = TRUE),
                                                                             cols = list(names = TRUE)
@@ -649,7 +648,8 @@ ui <- navbarPage(title = "TestApp",
                                                    ),
                                                    conditionalPanel(
                                                      condition = "input.CTIndTestInput == 'Datos'",
-                                                     
+                                                     "Seleccciona las variables que quieres utilizar para tu prueba",
+                                                     selectInput(inputId = "varsCTInd", label = NULL, choices = NULL, multiple = T),
                                                    )
                                   ),
                                   conditionalPanel(condition = "input.ContingencyTest == 'RXC'",
@@ -682,7 +682,8 @@ ui <- navbarPage(title = "TestApp",
                                                    ),
                                                    conditionalPanel(
                                                      condition = "input.CTRXCTestInput == 'Datos'",
-                            
+                                                     "Seleccciona las variables que quieres utilizar para tu prueba",
+                                                     selectInput(inputId = "varsCTRXC", label = NULL, choices = NULL, multiple = T)
                                                    )
                                   ),
                                   conditionalPanel(condition = "input.ContingencyTest == 'Mediana'",
@@ -702,7 +703,7 @@ ui <- navbarPage(title = "TestApp",
                                                               "Para evitar problemas de diseño, puedes ver tu matriz presionando siguiente boton. Automáticamente se genera una matriz de 2X2"),
                                                        column(width = 6,
                                                               dropdownButton(
-                                                                matrixInput("CTMedianMatrixDatos", value = CTMedianMatrixInit,
+                                                                matrixInput("CTMedianMatrixManual", value = CTMedianMatrixInit,
                                                                             class = "numeric",
                                                                             rows = list(names = TRUE),
                                                                             cols = list(names = TRUE)
@@ -714,13 +715,17 @@ ui <- navbarPage(title = "TestApp",
                                                    ),
                                                    conditionalPanel(
                                                      condition = "input.CTMedianTestInput == 'Datos'",
-          
+                                                     "¿Deseas que se calcule la mediana de manera automática o deseas agregarla?",
+                                                     checkboxInput("CalcMedian", "Calcular mediana", value = FALSE),
+                                                     "Seleccciona las variables que quieres utilizar para tu prueba",
+                                                     selectInput(inputId = "varsCTMedian", label = NULL, choices = NULL, multiple = T),
+                                                     conditionalPanel(
+                                                       condition = "!input.CalcMedian",
+                                                       numericInput("MedianManual", label = "Escribe la mediana", value = NA)
+                                                     )
                                                    )
                                   )
                                 )
-                                
-                                
-                                
                               ),
                               #Metadata de la aplicación----------------------------------------------------------------------------
                               hr(),
@@ -1849,9 +1854,8 @@ server <- function(input, output, session) {
   #Actualización de las pruebas (LaTex)
   
   #Verificación para la selección de las variables para las pruebas paramétricas-------------------------
-  
-  ##TTest-----------------
   output$TTest1 <- renderUI({
+    #TTest-------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 1){
       validate("Se necesitan al menos una variable para esta prueba")
@@ -1875,8 +1879,8 @@ server <- function(input, output, session) {
       selectInput("TTest2_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$TTest2_1_aux)
     }
   })
-  ##ZTest---------------------
   output$ZTest1 <- renderUI({
+    #ZTest--------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 1){
       validate("Se necesitan al menos una variable para esta prueba")
@@ -1900,8 +1904,8 @@ server <- function(input, output, session) {
       selectInput("ZTest2_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$ZTest2_1_aux)
     }
   })
-  ##Shapiro----------------------
   output$SWTest1 <- renderUI({
+    #Shapiro---------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 1){
       validate("Se necesitan al menos una variable para esta prueba")
@@ -1909,8 +1913,8 @@ server <- function(input, output, session) {
       selectInput("SWTest1_aux",label = "Selecciona tu variable",  choices = names(data()))
     }
   })
-  #Binomial--------------------------
   output$BinomialTestVar <- renderUI({
+    #Binomial-------------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 1){
       validate("Se necesitan al menos una variable para esta prueba")
@@ -1918,8 +1922,8 @@ server <- function(input, output, session) {
       selectInput("BinomialTestVar_aux",label = "Selecciona tu variable",  choices = names(data()))
     }
   })
-  #Cuantiles----------------------
   output$CuantilTPvar <- renderUI({
+    #Cuantiles---------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 1){
       validate()
@@ -1927,8 +1931,8 @@ server <- function(input, output, session) {
       selectInput("CuantilTPvar_aux",label = "Selecciona tu variable",  choices = names(data()))
     }
   })
-  #Signos--------------------------
   output$SigTPvar_1 <- renderUI({
+    #Signos-------------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 2){
       validate("Se necesitan al menos dos variables para esta prueba")
@@ -1944,8 +1948,8 @@ server <- function(input, output, session) {
       selectInput("SigTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$SigTPvar_1_aux)
     }
   })
-  #McNemar---------------------------------
   output$McNemarTPvar_1 <- renderUI({
+    #McNemar--------------------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 2){
       validate("Se necesitan al menos dos variables para esta prueba")
@@ -1961,8 +1965,8 @@ server <- function(input, output, session) {
       selectInput("McNemarTPvar_2_aux",label = NULL,  choices = names(data()) %rc% input$McNemarTPvar_1_aux)
     }
   })
-  #Actualización de la matriz McNemar------------------------
   observeEvent({
+    #Actualización de la matriz McNemar-----------------------------------------------------------------------------------------
     # req(input$file)
     # if (isTruthy(input$uno) && isTruthy(input$dos)) TRUE
     # if(check_leves(data()[[input$McNemarTPvar_1_aux]], data()[[input$McNemarTPvar_2_aux]])) TRUE
@@ -1977,8 +1981,8 @@ server <- function(input, output, session) {
     m <- matrix(t, 2, 2, dimnames = list(c("Antes 0", "Antes 1"), c("Después 0", "Después 1")))
     updateMatrixInput(session = session, inputId = "McNemarMatrixDatos", value = m)
   })
-  #CoxStuart--------------------------
   output$CSTPvar_1 <- renderUI({
+    #CoxStuart-------------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 2){
       validate("Se necesitan al menos dos variables para esta prueba")
@@ -1994,8 +1998,8 @@ server <- function(input, output, session) {
       selectInput("CSTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$CSTPvar_1_aux)
     }
   })
-  #RankSumTest---------------------------
   output$U_Mann_WhitneyTPvar_1 <- renderUI({
+    #RankSumTest--------------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 2){
       validate("Se necesitan al menos dos variables para esta prueba")
@@ -2011,8 +2015,8 @@ server <- function(input, output, session) {
       selectInput("U_Mann_WhitneyTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$U_Mann_WhitneyTPvar_1_aux)
     }
   })
-  #SignedRankTest---------------------
   output$Signed_RankTPvar_1 <- renderUI({
+    #SignedRankTest--------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 2){
       validate("Se necesitan al menos dos variables para esta prueba")
@@ -2028,8 +2032,8 @@ server <- function(input, output, session) {
       selectInput("Signed_RankTPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$Signed_RankTPvar_1_aux)
     }
   })
-  #Kruskall-Wallis--------------------
   output$Kruskal_WallisTPvar_1 <- renderUI({
+    #Kruskall-Wallis-------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 2){
       validate("Se necesitan al menos dos variables para esta prueba")
@@ -2045,8 +2049,8 @@ server <- function(input, output, session) {
       selectInput("Kruskal_WallisTPvar_2_aux",label = "Selecciona la variable que indicará los grupos de tus observaciones",  choices = names(data()) %rc% input$Kruskal_WallisTPvar_1_aux)
     }
   })
-  #Friedman--------------------------
   output$FriedmanTPvar_1 <- renderUI({
+    #Friedman-------------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 2){
       validate("Se necesitan al menos dos variables para esta prueba")
@@ -2062,8 +2066,8 @@ server <- function(input, output, session) {
       selectInput("FriedmanTPvar_2_aux",label = "Selecciona la variable que indicará los grupos de tus observaciones",  choices = names(data()) %rc% input$FriedmanTPvar_1_aux)
     }
   })
-  #Igualdad de varianzas por rangos (2 poblaciones)-------------------
   output$SRTFVM2TPvar_1 <- renderUI({
+    #Igualdad de varianzas por rangos (2 poblaciones)------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 2){
       validate("Se necesitan al menos dos variables para esta prueba")
@@ -2079,9 +2083,8 @@ server <- function(input, output, session) {
       selectInput("SRTFV2TPvar_2_aux",label = "Selecciona tu variable",  choices = names(data()) %rc% input$SRTFV2TPvar_1_aux)
     }
   })
-  
-  #Igualdad de varianzas por rangos (+2 poblaciones)-------------------
   output$SRTFVM2TPvar_1 <- renderUI({
+    #Igualdad de varianzas por rangos (+2 poblaciones)------------------------------------------------------------------------------------
     req(input$file)
     if(dim(data())[2] < 2){
       validate("Se necesitan al menos dos variables para esta prueba")
@@ -2098,17 +2101,55 @@ server <- function(input, output, session) {
     }
   })
   
-  #Matrices para prueba de independencia--------------------------------------------------------------
+  output$CT2X2TPvar_1 <- renderUI({
+    #Variables para 2X2 Contingency Table--------------------------------------------------------------------------------------------------
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate("Se necesitan al menos dos variables para esta prueba")
+    }else{
+      selectInput("CT2X2TPvar_1_aux",label = "Selecciona tus variables",  choices = names(data()))
+    }
+  })
+  output$CT2X2TPvar_2 <- renderUI({
+    req(input$file)
+    if(dim(data())[2] < 2){
+      validate()
+    }else{
+      selectInput("CT2X2TPvar_2_aux",label = NULL,  choices = names(data()) %rc% input$CT2X2TPvar_1_aux)
+    }
+  })
+  
   observeEvent({
+    #Actualización de la matriz 2X2 Contingency Table-----------------------------------------------------------------------------------------
+    input$CheckDataCT2X2
+  },{
+    p1 <- data()[[input$CT2X2TPvar_1_aux]]
+    p2 <- data()[[input$CT2X2TPvar_2_aux]]
+    validate(check_leves(p1,p2))
+    t <- table(p1, p2)
+    attr(t, "dimnames") <- NULL
+    m <- matrix(t, 2, 2, dimnames = list(c("Población 1", "Población 2"), c("Clase 1", "Clase 2")))
+    updateMatrixInput(session = session, inputId = "CT2X2MatrixDatos", value = m)
+  })
+  
+  observeEvent({
+    #Matrices para prueba de independencia-------------------------------------------------------------------------------------------------------------------------------
     input$generateMatrixInd
   }, {
     r <- input$RowsIndTestM
     c <- input$ColsIndTestM
     m <- matrix(rep(NA,r*c), r, c, dimnames = list(paste("R", 1:r, sep = ""), paste("C", 1:c, sep = "")))
-    updateMatrixInput(session = session, inputId = "IndTestsMatrixDatos", value = m)
+    updateMatrixInput(session = session, inputId = "IndTestsMatrixManual", value = m)
   })
-  #Matrices para prueba Chi-squared test for Differences in probabilities RXC------------------------
+    #Selección de variables para la prueba de independencia-------------------------------------------------------------------------------------------------------------------------------
   observeEvent({
+    input$file
+  },{
+    updateSelectInput(inputId = "varsCTInd", choices = unlist(names(data())))
+  })
+  
+  observeEvent({
+    #Matrices para prueba Chi-squared test for Differences in probabilities RXC-----------------------------------------------------------------------------------------
     input$generateMatrixCTRXC
   }, {
     r <- input$RowsCTRXCTestM
@@ -2116,16 +2157,29 @@ server <- function(input, output, session) {
     m <- matrix(rep(NA,r*c), r, c, dimnames = list(paste("R", 1:r, sep = ""), paste("C", 1:c, sep = "")))
     updateMatrixInput(session = session, inputId = "CTRXCMatrixDatos", value = m)
   })
-  #Matrices para prueba Chi-squared test for Median---------------------------------------
+  
+  #Selección de variables para la prueba Chi-squared test for Differences in probabilities RXC-------------------------------------------------------------------------------------------------------------------------------
   observeEvent({
+    input$file
+  },{
+    updateSelectInput(inputId = "varsCTRXC", choices = unlist(names(data())))
+  })
+  
+  observeEvent({
+    #Matrices para prueba Chi-squared test for Median--------------------------------------------------------------------------------------------------------
     input$generateMatrixCTMedian
   }, {
     c <- input$CTMedianTestM
     m <- matrix(rep(NA,2*c), 2, c, dimnames = list(c("> Mediana", "<= Mediana"), paste("M", 1:c, sep = "")))
-    updateMatrixInput(session = session, inputId = "CTMedianMatrixDatos", value = m)
+    updateMatrixInput(session = session, inputId = "CTMedianMatrixManual", value = m)
   })
   
-  
+  #Selección de variables para la prueba de Medias-------------------------------------------------------------------------------------------------------------------------------
+  observeEvent({
+    input$file
+  },{
+    updateSelectInput(inputId = "varsCTMedian", choices = unlist(names(data())))
+  })
   
   #Summary de las pruebas----------------------------------------------------------------
   output$summaryP <- renderPrint({
@@ -2823,10 +2877,16 @@ server <- function(input, output, session) {
         validate(need(input$CT2X2TestInput, "Selecciona que como deseas realizar tu prueba"))
         if(input$CT2X2TestInput == "Datos"){
           req(input$file)
+          validate(verify_matrix(input$CT2X2MatrixDatos))
+          prueba <- CSDP2X2.test(input$CT2X2MatrixDatos, alternative = input$CT2X2TestKindOfTestD, significance = input$alphaTest)
+          Proves$test <- prueba
+          Proves$statistical <- prueba$statistic
+          Proves$cuantil <- prueba$interval
+          Proves$p_value <- prueba$p.value
         }
         if(input$CT2X2TestInput == "Manual"){
           validate(verify_matrix(input$CT2X2MatrixManual))
-          prueba <- CSDP2X2.test(input$CT2X2MatrixManual, alternative = input$CT2X2TestKindOfTest1, significance = input$alphaTest)
+          prueba <- CSDP2X2.test(input$CT2X2MatrixManual, alternative = input$CT2X2TestKindOfTestM, significance = input$alphaTest)
           Proves$test <- prueba
           Proves$statistical <- prueba$statistic
           Proves$cuantil <- prueba$interval
@@ -2837,10 +2897,19 @@ server <- function(input, output, session) {
         validate(need(input$CTIndTestInput, "Selecciona que como deseas realizar tu prueba"))
         if(input$CTIndTestInput == "Datos"){
           req(input$file)
+          req(input$varsCTInd)
+          validate(need(length(input$varsCTInd) == 2, "Debes seleccionar dos variables para tu prueba"))
+          validate(need(input$CTIndTestInput, "Selecciona que como deseas realizar tu prueba"))
+          m <- table(data()[input$varsCTInd])
+          prueba <- chisq.test(m)
+          Proves$test <- prueba
+          Proves$statistical <- prueba$statistic
+          Proves$cuantil <- qchisq(1-input$alphaTest, df = prueba$parameter)
+          Proves$p_value <- prueba$p.value
         }
         if(input$CTIndTestInput == "Manual"){
-          validate(verify_matrix(input$IndTestsMatrixDatos))
-          prueba <- chisq.test(input$IndTestsMatrixDatos)
+          validate(verify_matrix(input$IndTestsMatrixManual))
+          prueba <- chisq.test(input$IndTestsMatrixManual)
           Proves$test <- prueba
           Proves$statistical <- prueba$statistic
           Proves$cuantil <- qchisq(1-input$alphaTest, df = prueba$parameter)
@@ -2851,6 +2920,15 @@ server <- function(input, output, session) {
         validate(need(input$CTRXCTestInput, "Selecciona que como deseas realizar tu prueba"))
         if(input$CTRXCTestInput == "Datos"){
           req(input$file)
+          req(input$varsCTRXC)
+          validate(need(length(input$varsCTRXC) == 2, "Debes seleccionar dos variables para tu prueba"))
+          validate(need(input$CTRXCTestInput, "Selecciona que como deseas realizar tu prueba"))
+          m <- table(data()[input$varsCTRXC])
+          prueba <- chisq.test(m)
+          Proves$test <- prueba
+          Proves$statistical <- prueba$statistic
+          Proves$cuantil <- qchisq(1-input$alphaTest, df = prueba$parameter)
+          Proves$p_value <- prueba$p.value
         }
         if(input$CTRXCTestInput == "Manual"){
           validate(verify_matrix(input$CTRXCMatrixDatos))
@@ -2863,12 +2941,32 @@ server <- function(input, output, session) {
       }
       if(input$ContingencyTest == "Mediana"){
         validate(need(input$CTMedianTestInput, "Selecciona que como deseas realizar tu prueba"))
+        if(input$CTMedianTestInput == "Manual"){
+          validate(verify_matrix(input$CTMedianMatrixManual))
+          prueba <- median.test(input$CTMedianMatrixManual, significance = input$alphaTest)
+          Proves$test <- prueba
+          Proves$statistical <- prueba$statistic
+          Proves$cuantil <- prueba$interval
+          Proves$p_value <- prueba$p.value
+        }
         if(input$CTMedianTestInput == "Datos"){
           req(input$file)
-        }
-        if(input$CTMedianTestInput == "Manual"){
-          validate(verify_matrix(input$CTMedianMatrixDatos))
-          prueba <- median.test(input$CTMedianMatrixDatos, significance = input$alphaTest)
+          m <- NULL
+          req(input$varsCTMedian)
+          datos <- data()[input$varsCTMedian]
+          if(input$CalcMedian){
+            mediana <- median(as_vector(datos), na.rm = T)
+            up <- map(datos, ~.[.<= mediana]) %>% map(~na.omit(.x) %>% length()) %>% unlist()
+            below <- map(datos, ~.[. > mediana]) %>% map(~na.omit(.x) %>% length()) %>% unlist()
+            m <- matrix(c(up, below), nrow = 2, byrow = T)
+          }
+          else{
+            req(input$MedianManual)
+            up <- map(datos, ~.[.<= input$MedianManual]) %>% map(~na.omit(.x) %>% length()) %>% unlist()
+            below <- map(datos, ~.[. > input$MedianManual]) %>% map(~na.omit(.x) %>% length()) %>% unlist()
+            m <- matrix(c(up, below), nrow = 2, byrow = T)
+          }
+          prueba <- median.test(m, significance = input$alphaTest)
           Proves$test <- prueba
           Proves$statistical <- prueba$statistic
           Proves$cuantil <- prueba$interval

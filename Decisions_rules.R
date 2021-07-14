@@ -409,26 +409,26 @@ VarianceRankTestHyp <- conditionalPanel(condition = "input.NParametricTest == 'V
 ContingencyTablesTestHyp <- conditionalPanel(condition = "input.NParametricTest == 'Tablas de Contingencia'",
                                         conditionalPanel(condition = "input.ContingencyTest == '2X2'",
                                                          conditionalPanel(condition = "input.CT2X2TestInput == 'Manual'",
-                                                                          conditionalPanel(condition = "input.SRTFV2TestKindOfTestM == 'two.sided'",
+                                                                          conditionalPanel(condition = "input.CT2X2TestKindOfTestM == 'two.sided'",
                                                                                            align = "center",
                                                                                            "$T<t_1\\ o\\ T>t_2$"
                                                                           ),
-                                                                          conditionalPanel(condition = "input.SRTFV2TestKindOfTestM == 'less'",
+                                                                          conditionalPanel(condition = "input.CT2X2TestKindOfTestM == 'less'",
                                                                                            align = "center",
                                                                                            "$T< t$"),
-                                                                          conditionalPanel(condition = "input.SRTFV2TestKindOfTestM == 'greater'",
+                                                                          conditionalPanel(condition = "input.CT2X2TestKindOfTestM == 'greater'",
                                                                                            align = "center",
                                                                                            "$T>t$")
                                                          ),
                                                          conditionalPanel(condition = "input.CT2X2TestInput == 'Datos'",
-                                                                          conditionalPanel(condition = "input.SRTFV2TestKindOfTestD == 'two.sided'",
+                                                                          conditionalPanel(condition = "input.CT2X2TestKindOfTestD == 'two.sided'",
                                                                                            align = "center",
                                                                                            "$T<t_1\\ o\\ T>t_2$"
                                                                           ),
-                                                                          conditionalPanel(condition = "input.SRTFV2TestKindOfTestD == 'less'",
+                                                                          conditionalPanel(condition = "input.CT2X2TestKindOfTestD == 'less'",
                                                                                            align = "center",
                                                                                            "$T< t$"),
-                                                                          conditionalPanel(condition = "input.SRTFV2TestKindOfTestD == 'greater'",
+                                                                          conditionalPanel(condition = "input.CT2X2TestKindOfTestD == 'greater'",
                                                                                            align = "center",
                                                                                            "$T>t$")
                                                          )

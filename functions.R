@@ -445,7 +445,7 @@ rankVar.test <- function(m, g, mu = NULL, significance = 0.05){
   
 }
 #Función para prueba Chi-squared test for Differences in probabilities 2X2--------------------------------------------------------------------------------
-CSDP2X2.test <- function(matriz,	significance = 0.05){
+CSDP2X2.test <- function(matriz,	significance = 0.05, alternative = "two.sided"){
   matriz <- addmargins(matriz)
   N <- matriz[3,3]
   O1 <- matriz[1,1]
@@ -499,10 +499,11 @@ median.test <- function(matriz, significance = 0.05){
   q <- qchisq(significance, lower.tail = F, df = (shape[2]-2))
   p_val <- pchisq(est, lower.tail = F,  df = (shape[2]-2))
   names(est) <- "T"
-  
+  df <- (shape[2]-2)
+  names(df) <- "df"
   DNAME <- "Different samples"
   RVAL <- list(statistic = est,
-               parameter = (shape[2]-2),
+               parameter = df,
                p.value = as.numeric(p_val), 
                interval = q, 
                alternative = alternative, method = "Chi-squared test for Medians", 
