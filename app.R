@@ -28,7 +28,7 @@ ui <- navbarPage(title = "TestApp",
                           #Sidebar-----------------------------------------------------------------------------------
                           sidebarLayout(
                             sidebarPanel(
-                              style = "height:1200px;",
+                              style = "height:1250px;",
                               h4("Selecciona las mejores opciones para tu prueba"),
                               #Entrada de datos----------------------------------------------------------------------
                               fileInput("file", label = "Aquí puedes agregar tu archivo",  buttonLabel = "Selecciona tu archivo..."),
@@ -87,29 +87,96 @@ ui <- navbarPage(title = "TestApp",
                                 #Prueba Z---------------------------------------------------------------------------
                                 conditionalPanel(
                                   condition = "input.ParametricTest == 'Z-test'",
-                                  radioGroupButtons(
-                                    selected = NA,
-                                    inputId = "ZTestKind",
-                                    label = NULL, 
-                                    choices = c("1 muestra", "2 muestras"),
-                                    status = "btn btn-info"
+                                  fluidRow(
+                                    column(width = 5,
+                                           radioGroupButtons(
+                                             selected = NA,
+                                             inputId = "ZTestKind",
+                                             label = "Elige la forma de aplicar la prueba", 
+                                             choices = c("1 muestra", "2 muestras"),
+                                             status = "btn btn-info"
+                                           )
+                                    ),
+                                    column(width = 7,
+                                           conditionalPanel(
+                                             condition = "input.ZTestKind == '1 muestra'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "ZTest1Input",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             )
+                                           ),
+                                           conditionalPanel(
+                                             condition = "input.ZTestKind == '2 muestras'",
+                                             radioGroupButtons(
+                                               selected = NA,
+                                               inputId = "ZTest2Input",
+                                               label = "Elige la forma de aplicar la prueba",
+                                               choices = c("Manual", "Datos"),
+                                               status = "btn btn-info"
+                                             )
+                                           )
+                                    )
                                   ),
+                                  #Paneles condicionales para cada prueba Z---------------------------------------------------------------------------------------------
                                   # Prueba Z 1 muestra-------------------------------------------------------
-                                  conditionalPanel(
-                                    condition = "input.ZTestKind == '1 muestra'",
-                                    uiOutput("ZTest1"),
-                                    numericInput(inputId = "ZTest1Mu", "Agrega la media", value = 0, step = 1),
-                                    numericInput(inputId = "ZTest1Sigma", "Agrega la desviación estandar", step = 1, value = NA),
-                                    selectInput(inputId = "ZTestKindOfTest1", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                  conditionalPanel(condition = "input.ZTestKind == '1 muestra'",
+                                                   conditionalPanel(condition = "input.ZTest1Input == 'Datos'",
+                                                                    uiOutput("ZTest1"),
+                                                                    numericInput(inputId = "ZTest1Mu", "Agrega la media", value = 0, step = 1),
+                                                                    numericInput(inputId = "ZTest1Sigma", "Agrega la desviación estandar", step = 1, value = NA),
+                                                                    selectInput(inputId = "ZTestKindOfTest1", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   ),
+                                                   conditionalPanel(condition = "input.ZTest1Input == 'Manual'",
+                                                                    numericInput(inputId = "ZTest1MuMM", "Agrega la media muestral", value = 0, step = 1),
+                                                                    numericInput(inputId = "ZTest1MuMP", "Agrega la media poblacional", value = 0, step = 1),
+                                                                    numericInput(inputId = "ZTest1SigmaM", "Agrega la desviación estandar poblacional", step = 1, value = NA),
+                                                                    numericInput(inputId = "ZTest1n1", "Agrega el tamaño de la muestra", step = 1, value = NA),
+                                                                    selectInput(inputId = "ZTestKindOfTest1M", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   )
                                   ),
                                   # Prueba Z 2 muestras------------------------------------------------------
-                                  conditionalPanel(
-                                    condition = "input.ZTestKind == '2 muestras'",
-                                    uiOutput("ZTest2_1"),
-                                    uiOutput("ZTest2_2"),
-                                    numericInput(inputId = "ZTest2_1Sigma", "Agrega la desviación estandar", step = 1, value = NA),
-                                    numericInput(inputId = "ZTest2_2Sigma", "Agrega la desviación estandar", step = 1, value = NA),
-                                    selectInput(inputId = "ZTestKindOfTest2", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                  conditionalPanel(condition = "input.ZTestKind == '2 muestras'",
+                                                   conditionalPanel(condition = "input.ZTest2Input == 'Datos'",
+                                                                    uiOutput("ZTest2_1"),
+                                                                    uiOutput("ZTest2_2"),
+                                                                    numericInput(inputId = "ZTest2_1Sigma", "Agrega la desviación estandar", step = 1, value = NA),
+                                                                    numericInput(inputId = "ZTest2_2Sigma", "Agrega la desviación estandar", step = 1, value = NA),
+                                                                    selectInput(inputId = "ZTestKindOfTest2", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   ),
+                                                   conditionalPanel(condition = "input.ZTest2Input == 'Manual'",
+                                                                    fluidRow(
+                                                                      h5("Agrega las medias muestrales"),
+                                                                      column(6,
+                                                                             numericInput(inputId = "ZTest2MuMM1", "Muestral/Población 1", value = 0, step = 1)), 
+                                                                      column(6,
+                                                                             numericInput(inputId = "ZTest2MuMM2", "Muestral/Población 2", value = 0, step = 1))
+                                                                    ),
+                                                                    fluidRow(
+                                                                      h5("Agrega los tamaños muestrales"),
+                                                                      column(6,
+                                                                             numericInput(inputId = "ZTest2n1", NULL, step = 1, value = NA)), 
+                                                                      column(6,
+                                                                             numericInput(inputId = "ZTest2n2", NULL, step = 1, value = NA))
+                                                                    ),
+                                                                    fluidRow(
+                                                                      h5("Agrega las medias poblacionales"),
+                                                                      column(6,
+                                                                             numericInput(inputId = "ZTest2MuMP1", NULL, value = 0, step = 1)), 
+                                                                      column(6,
+                                                                             numericInput(inputId = "ZTest2MuMP2", NULL, value = 0, step = 1))
+                                                                    ),
+                                                                    fluidRow(
+                                                                      h5("Agrega las desviaciones estandar poblacionales"),
+                                                                      column(6,
+                                                                             numericInput(inputId = "ZTest2_1SigmaM", NULL, step = 1, value = NA)), 
+                                                                      column(6,
+                                                                             numericInput(inputId = "ZTest2_2SigmaM", NULL, step = 1, value = NA))
+                                                                    ),
+                                                                    selectInput(inputId = "ZTestKindOfTest2M", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
+                                                   )
                                   )
                                 ),
                                 #Prueba Shapiro-Wilks---------------------------------------------------------------
@@ -240,7 +307,7 @@ ui <- navbarPage(title = "TestApp",
                                                      numericInput(inputId = "CuantilTT1", label = "$T_1 = $ # de obs. $\\leq x^{*}$", value = NA, min = 0),
                                                      numericInput(inputId = "CuantilTT2", label = "$T_2 = $ # de obs. $< x^{*}$", value = NA, min = 0),
                                                      numericInput(inputId = "CuantilTN", label = "Tamaño de la muestra", value = NA, min = 0),
-                                                     numericInput(inputId = "CuantilTCuantilM", label = "Cuantil", value = NA, min = 0),
+                                                     numericInput(inputId = "CuantilTCuantilM", label = "Cuantil al", value = NA, min = 0),
                                                      selectInput(inputId = "CuantilTestKindOfTestM", "Hipótesis alternativa", choices = c("two.sided", "greater", "less"), selected = 'two.sided')
                                                    ),
                                                    conditionalPanel(
@@ -1082,33 +1149,67 @@ server <- function(input, output, session) {
         ggtitle(TeX(paste("$N(0,1)$")))
       
       if(input$ZTestKind == "1 muestra"){
-        validate(need(!is.na(input$ZTest1Sigma), "Ingresa la desviación estandar"))
-        
-        cuantil <- Proves$cuantil
-        if(input$ZTestKindOfTest1 == "two.sided"){
-          cuantil <- c(-Proves$cuantil, Proves$cuantil)
+        if(input$BinomialTestInput == 'Manual'){
+          validate(need(!is.na(input$ZTest1SigmaM), "Ingresa la desviación estandar"))
+          validate(need(!is.na(input$ZTest1n1), "Ingresa el tamaño muestral"))
+          cuantil <- Proves$cuantil
+          if(input$ZTestKindOfTest1M == "two.sided"){
+            cuantil <- c(-Proves$cuantil, Proves$cuantil)
+          }
+          plotis$plot <- graph + 
+            geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dnorm(Proves$statistical), colour = "Estadístico: ")) + 
+            geom_segment(aes(x = cuantil, xend = cuantil, y = 0, yend = dnorm(cuantil), colour = "Cuantíl: ")) +
+            stat_function(color = NA, fun= ~under_curve(type = input$ZTestKindOfTest1M, alpha = input$alphaTest, x = .x, fun = dnorm, fq = qnorm), 
+                          geom = 'area', fill = '#13378f', alpha = 0.2)+
+            scale_colour_manual(values = c("#386df2", "black"))
+        }else{
+          req(input$file)
+          validate(need(!is.na(input$ZTest1Sigma), "Ingresa la desviación estandar"))
+          cuantil <- Proves$cuantil
+          if(input$ZTestKindOfTest1 == "two.sided"){
+            cuantil <- c(-Proves$cuantil, Proves$cuantil)
+          }
+          plotis$plot <- graph + 
+            geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dnorm(Proves$statistical), colour = "Estadístico: ")) + 
+            geom_segment(aes(x = cuantil, xend = cuantil, y = 0, yend = dnorm(cuantil), colour = "Cuantíl: ")) +
+            stat_function(color = NA, fun= ~under_curve(type = input$ZTestKindOfTest1, alpha = input$alphaTest, x = .x, fun = dnorm, fq = qnorm), 
+                          geom = 'area', fill = '#13378f', alpha = 0.2)+
+            scale_colour_manual(values = c("#386df2", "black"))
         }
-        plotis$plot <- graph + 
-          geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dnorm(Proves$statistical), colour = "Estadístico: ")) + 
-          geom_segment(aes(x = cuantil, xend = cuantil, y = 0, yend = dnorm(cuantil), colour = "Cuantíl: ")) +
-          stat_function(color = NA, fun= ~under_curve(type = input$ZTestKindOfTest1, alpha = input$alphaTest, x = .x, fun = dnorm, fq = qnorm), 
-                        geom = 'area', fill = '#13378f', alpha = 0.2)+
-          scale_colour_manual(values = c("#386df2", "black"))
-        
-      }else{
-        validate(need(!is.na(input$ZTest2_1Sigma), "Ingresa la desviación estandar"))
-        validate(need(!is.na(input$ZTest2_2Sigma), "Ingresa la desviación estandar"))
-        
-        cuantil <- Proves$cuantil
-        if(input$ZTestKindOfTest2 == "two.sided"){
-          cuantil <- c(-Proves$cuantil, Proves$cuantil)
+      }
+      if(input$ZTestKind == "2 muestras"){
+        if(input$BinomialTestInput == 'Manual'){
+          validate(need(!is.na(input$ZTest2_1Sigma), "Ingresa la desviación estandar"))
+          validate(need(!is.na(input$ZTest2_2Sigma), "Ingresa la desviación estandar"))
+          validate(need(!is.na(input$ZTest2n1), "Ingresa el tamaño muestral"))
+          validate(need(!is.na(input$ZTest2n2), "Ingresa el tamaño muestral"))
+          cuantil <- Proves$cuantil
+          if(input$ZTestKindOfTest2M == "two.sided"){
+            cuantil <- c(-Proves$cuantil, Proves$cuantil)
+          }
+          plotis$plot <- graph + 
+            geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dnorm(Proves$statistical), colour = "Estadístico: ")) + 
+            geom_segment(aes(x = cuantil, xend = cuantil, y = 0, yend = dnorm(cuantil), colour = "Cuantíl: ")) +
+            stat_function(color = NA, fun= ~under_curve(type = input$ZTestKindOfTest2M, alpha = input$alphaTest, x = .x, fun = dnorm, fq = qnorm), 
+                          geom = 'area', fill = '#13378f', alpha = 0.2)+
+            scale_colour_manual(values = c("#386df2", "black"))
+          
+        }else{
+          req(input$file)
+          validate(need(!is.na(input$ZTest2_1Sigma), "Ingresa la desviación estandar"))
+          validate(need(!is.na(input$ZTest2_2Sigma), "Ingresa la desviación estandar"))
+          
+          cuantil <- Proves$cuantil
+          if(input$ZTestKindOfTest2 == "two.sided"){
+            cuantil <- c(-Proves$cuantil, Proves$cuantil)
+          }
+          plotis$plot <- graph + 
+            geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dnorm(Proves$statistical), colour = "Estadístico: ")) + 
+            geom_segment(aes(x = cuantil, xend = cuantil, y = 0, yend = dnorm(cuantil), colour = "Cuantíl: ")) +
+            stat_function(color = NA, fun= ~under_curve(type = input$ZTestKindOfTest2, alpha = input$alphaTest, x = .x, fun = dnorm, fq = qnorm), 
+                          geom = 'area', fill = '#13378f', alpha = 0.2)+
+            scale_colour_manual(values = c("#386df2", "black"))
         }
-        plotis$plot <- graph + 
-          geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dnorm(Proves$statistical), colour = "Estadístico: ")) + 
-          geom_segment(aes(x = cuantil, xend = cuantil, y = 0, yend = dnorm(cuantil), colour = "Cuantíl: ")) +
-          stat_function(color = NA, fun= ~under_curve(type = input$ZTestKindOfTest2, alpha = input$alphaTest, x = .x, fun = dnorm, fq = qnorm), 
-                        geom = 'area', fill = '#13378f', alpha = 0.2)+
-          scale_colour_manual(values = c("#386df2", "black"))
       }
     }
     isolate(plotis$plot)
@@ -1854,6 +1955,7 @@ server <- function(input, output, session) {
   #Actualización de las pruebas (LaTex)
   
   #Verificación para la selección de las variables para las pruebas paramétricas-------------------------
+  #Esto sólo es cuando se elija la opción utilizar datos.
   output$TTest1 <- renderUI({
     #TTest-------------------------------------------------------------------------
     req(input$file)
@@ -2183,36 +2285,74 @@ server <- function(input, output, session) {
   
   #Summary de las pruebas----------------------------------------------------------------
   output$summaryP <- renderPrint({
-    req(input$file)
     validate(need(input$ParametricTest %in% c("Z-test", "T-test", "Shapiro-Wilks"), "Selecciona un tipo de prueba Paramétrica"))
     if(input$ParametricTest == "Z-test"){
       validate(need(input$ZTestKind %in% c("1 muestra", "2 muestras"), "Selecciona un tipo de prueba Z"))
       if(input$ZTestKind == '1 muestra'){
-        validate(need(!is.na(input$ZTest1Sigma), "Ingresa la desviación estandar"))
-        var1 <- data()[[input$ZTest1_aux]]
-        prueba <- BSDA::z.test(var1, mu = input$ZTest1Mu, sigma.x = input$ZTest1Sigma, alternative = input$ZTestKindOfTest1, conf.level = 1-input$alphaTest)
-        Proves$test <- prueba
-        Proves$statistical <- prueba$statistic
-        Proves$p_value <- prueba$p.value
-        if(input$ZTestKindOfTest1 == "greater"){
-          Proves$cuantil <- qnorm(p = alpha(input$ZTestKindOfTest1, alpha = input$alphaTest), lower.tail = FALSE)
-        }else{
-          Proves$cuantil <- qnorm(p = alpha(input$ZTestKindOfTest1, alpha = input$alphaTest))
+        validate(need(input$ZTest1Input, "Selecciona como deseas realizar tu prueba"))
+        if(input$ZTest1Input == "Datos"){
+          req(input$file)
+          validate(need(!is.na(input$ZTest1Sigma), "Ingresa la desviación estandar"))
+          var1 <- data()[[input$ZTest1_aux]]
+          prueba <- BSDA::z.test(var1, mu = input$ZTest1Mu, sigma.x = input$ZTest1Sigma, alternative = input$ZTestKindOfTest1, conf.level = 1-input$alphaTest)
+          Proves$test <- prueba
+          Proves$statistical <- prueba$statistic
+          Proves$p_value <- prueba$p.value
+          if(input$ZTestKindOfTest1 == "greater"){
+            Proves$cuantil <- qnorm(p = alpha(input$ZTestKindOfTest1, alpha = input$alphaTest), lower.tail = FALSE)
+          }else{
+            Proves$cuantil <- qnorm(p = alpha(input$ZTestKindOfTest1, alpha = input$alphaTest))
+          }
+        }
+        if(input$ZTest1Input == "Manual"){
+          validate(need(!is.na(input$ZTest1SigmaM), "Ingresa la desviación estandar"))
+          validate(need(!is.na(input$ZTest1n1), "Ingresa el tamaño muestral"))
+          prueba <- BSDA::zsum.test(mean.x = input$ZTest1MuMM, sigma.x = input$ZTest1SigmaM, n.x = input$ZTest1n1, mu = input$ZTest1MuMP, alternative = input$ZTestKindOfTest1M, conf.level = 1-input$alphaTest)
+          Proves$test <- prueba
+          Proves$statistical <- prueba$statistic
+          Proves$p_value <- prueba$p.value
+          if(input$ZTestKindOfTest1M == "greater"){
+            Proves$cuantil <- qnorm(p = alpha(input$ZTestKindOfTest1M, alpha = input$alphaTest), lower.tail = FALSE)
+          }else{
+            Proves$cuantil <- qnorm(p = alpha(input$ZTestKindOfTest1M, alpha = input$alphaTest))
+          }
         }
       }
       if(input$ZTestKind == '2 muestras'){
-        validate(need(!is.na(input$ZTest2_1Sigma), "Ingresa la desviación estandar"))
-        validate(need(!is.na(input$ZTest2_2Sigma), "Ingresa la desviación estandar"))
-        var1 <- data()[[input$ZTest2_1_aux]]
-        var2 <- data()[[input$ZTest2_2_aux]]
-        prueba <- BSDA::z.test(x = var1, y = var2, sigma.x = input$ZTest2_1Sigma, sigma.y = input$ZTest2_2Sigma, alternative = input$ZTestKindOfTest2, conf.level = 1-input$alphaTest)
-        Proves$test <- prueba
-        Proves$statistical <- prueba$statistic
-        Proves$p_value <- prueba$p.value
-        if(input$ZTestKindOfTest2 == "greater"){
-          Proves$cuantil <- qnorm(p = alpha(input$ZTestKindOfTest2, alpha = input$alphaTest), lower.tail = FALSE)
-        }else{
-          Proves$cuantil <- qnorm(p = alpha(input$ZTestKindOfTest2, alpha = input$alphaTest))
+        validate(need(input$ZTest2Input, "Selecciona como deseas realizar tu prueba"))
+        if(input$ZTest2Input == "Datos"){
+          req(input$file)
+          validate(need(!is.na(input$ZTest2_1Sigma), "Ingresa la desviación estandar"))
+          validate(need(!is.na(input$ZTest2_2Sigma), "Ingresa la desviación estandar"))
+          var1 <- data()[[input$ZTest2_1_aux]]
+          var2 <- data()[[input$ZTest2_2_aux]]
+          prueba <- BSDA::z.test(x = var1, y = var2, sigma.x = input$ZTest2_1Sigma, sigma.y = input$ZTest2_2Sigma, alternative = input$ZTestKindOfTest2, conf.level = 1-input$alphaTest)
+          Proves$test <- prueba
+          Proves$statistical <- prueba$statistic
+          Proves$p_value <- prueba$p.value
+          if(input$ZTestKindOfTest2 == "greater"){
+            Proves$cuantil <- qnorm(p = alpha(input$ZTestKindOfTest2, alpha = input$alphaTest), lower.tail = FALSE)
+          }else{
+            Proves$cuantil <- qnorm(p = alpha(input$ZTestKindOfTest2, alpha = input$alphaTest))
+          }
+        }
+        if(input$ZTest2Input == "Manual"){
+          validate(need(!is.na(input$ZTest2_1SigmaM), "Ingresa la desviación estandar 1"))
+          validate(need(!is.na(input$ZTest2_2SigmaM), "Ingresa la desviación estandar 2"))
+          validate(need(!is.na(input$ZTest2n1), "Ingresa el tamaño muestral"))
+          validate(need(!is.na(input$ZTest2n2), "Ingresa el tamaño muestral"))
+          prueba <- BSDA::zsum.test(mean.x = input$ZTest2MuMM1, sigma.x = input$ZTest2_1SigmaM, n.x = input$ZTest2n1,
+                                    mean.y = input$ZTest2MuMM2, sigma.y = input$ZTest2_2SigmaM, n.y = input$ZTest2n2,
+                                    mu = (input$ZTest2MuMP1-input$ZTest2MuMP2),
+                                    alternative = input$ZTestKindOfTest2M, conf.level = 1-input$alphaTest)
+          Proves$test <- prueba
+          Proves$statistical <- prueba$statistic
+          Proves$p_value <- prueba$p.value
+          if(input$ZTestKindOfTest2M == "greater"){
+            Proves$cuantil <- qnorm(p = alpha(input$ZTestKindOfTest2M, alpha = input$alphaTest), lower.tail = FALSE)
+          }else{
+            Proves$cuantil <- qnorm(p = alpha(input$ZTestKindOfTest2M, alpha = input$alphaTest))
+          }
         }
       }
     }

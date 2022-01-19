@@ -5,10 +5,10 @@ account: carlosfvasquez
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3712892
-bundleId: 4820404
+bundleId: 5486164
 url: https://carlosfvasquez.shinyapps.io/TestApp/
-when: 1626301579.10427
-lastSyncTime: 1626301579.10428
+when: 1642618187.00438
+lastSyncTime: 1642618187.00441
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: .gitattributes|Deporte.csv|LICENSE|McNemarDataTest.csv|MedianExample.csv|RankSumDataTest.csv|README.md
