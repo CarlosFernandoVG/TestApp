@@ -1056,13 +1056,14 @@ server <- function(input, output, session) {
       guides(colour = guide_legend(label.position = "left", title = NULL)) +
       labs(x = NULL, y = "Densidad", caption = "Gráfica de densidad de la distribución del estadístico. También se agregan las regiones de rechazo.") + 
       general_theme 
-    plot_b
+    return(plot_b)
   })
   plot_NP <- reactive({
     #gráfica base para pruebas No Paramétricas----------------------------------------------------------------------
     if(input$BinomialTestInput == 'Manual'){
       dat <- data_frame(x = c(input$RangoX1NP,input$RangoX2NP))
-      if(input$BinomialTestKindOfTestM == "two.sided"){dat <- data_frame(x = c(0,input$RangoX2NP))}
+      if(input$BinomialTestKindOfTestM == "two.sided"){
+        dat <- data_frame(x = c(0,input$RangoX2NP))}
       #Una gráfica base
       plot_b <- dat %>% 
         ggplot(aes(x = x)) + 
@@ -1110,16 +1111,16 @@ server <- function(input, output, session) {
 
   output$DensityParametricPlots <- renderPlot({
     #Gráficas paramétricas---------------------------------------------------------------------------------------------
-    req(input$file)
-    graph <- plot_P()
     if(input$ParametricTest == "T-test"){
       #TTest-----------------------------------------------------------------------------------------------------------
+      validate(need(input$ParametricTest, ""))
       if(input$TTestKind == "1 muestra"){
+        req(input$file)
         cuantil <- Proves$cuantil
         if(input$TTestKindOfTest1 == "two.sided"){
           cuantil <- c(-Proves$cuantil, Proves$cuantil)
         }
-        plotis$plot <- graph +
+        plotis$plot <- plot_P() +
           stat_function(fun = ~dt(.x, Proves$test$parameter)) + 
           ggtitle(TeX(paste("$Student's T_{", Proves$test$parameter, "}$")))+
           geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dt(Proves$statistical, Proves$test$parameter), colour = "Estadístico: ")) + 
@@ -1132,7 +1133,7 @@ server <- function(input, output, session) {
         if(input$TTestKindOfTest2 == "two.sided"){
           cuantil <- c(-Proves$cuantil, Proves$cuantil)
         }
-        plotis$plot <- graph +
+        plotis$plot <- plot_P() +
           stat_function(fun = ~dt(.x, Proves$test$parameter)) + 
           ggtitle(TeX(paste("$Student's T_{", Proves$test$parameter, "}$")))+
           geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dt(Proves$statistical, Proves$test$parameter), colour = "Estadístico: ")) + 
@@ -1143,13 +1144,14 @@ server <- function(input, output, session) {
       }
     }
     if(input$ParametricTest == "Z-test"){
-      #ZTest------------------------------------------------------------------------------------------------------------
-      graph <- plot_P() +
-        stat_function(fun = ~dnorm(.x)) + 
+      #Geeralizamos la gráfica ya que en todos los casos tomaremos una normal (0,1)
+      graph <- plot_P()+
+        stat_function(fun = ~dnorm(.x))+
         ggtitle(TeX(paste("$N(0,1)$")))
-      
+      #ZTest------------------------------------------------------------------------------------------------------------
       if(input$ZTestKind == "1 muestra"){
-        if(input$BinomialTestInput == 'Manual'){
+        validate(need(input$ZTest1Input, ""))
+        if(input$ZTest1Input == 'Manual'){
           validate(need(!is.na(input$ZTest1SigmaM), "Ingresa la desviación estandar"))
           validate(need(!is.na(input$ZTest1n1), "Ingresa el tamaño muestral"))
           cuantil <- Proves$cuantil
@@ -1169,18 +1171,19 @@ server <- function(input, output, session) {
           if(input$ZTestKindOfTest1 == "two.sided"){
             cuantil <- c(-Proves$cuantil, Proves$cuantil)
           }
-          plotis$plot <- graph + 
-            geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dnorm(Proves$statistical), colour = "Estadístico: ")) + 
+          plotis$plot <- graph +
+            geom_segment(aes(x = Proves$statistical, xend = Proves$statistical, y = 0, yend = dnorm(Proves$statistical), colour = "Estadístico: ")) +
             geom_segment(aes(x = cuantil, xend = cuantil, y = 0, yend = dnorm(cuantil), colour = "Cuantíl: ")) +
-            stat_function(color = NA, fun= ~under_curve(type = input$ZTestKindOfTest1, alpha = input$alphaTest, x = .x, fun = dnorm, fq = qnorm), 
+            stat_function(color = NA, fun= ~under_curve(type = input$ZTestKindOfTest1, alpha = input$alphaTest, x = .x, fun = dnorm, fq = qnorm),
                           geom = 'area', fill = '#13378f', alpha = 0.2)+
             scale_colour_manual(values = c("#386df2", "black"))
         }
       }
       if(input$ZTestKind == "2 muestras"){
-        if(input$BinomialTestInput == 'Manual'){
-          validate(need(!is.na(input$ZTest2_1Sigma), "Ingresa la desviación estandar"))
-          validate(need(!is.na(input$ZTest2_2Sigma), "Ingresa la desviación estandar"))
+        validate(need(input$ZTest2Input, ""))
+        if(input$ZTest2Input == 'Manual'){
+          validate(need(!is.na(input$ZTest2_1SigmaM), "Ingresa la desviación estandar"))
+          validate(need(!is.na(input$ZTest2_1SigmaM), "Ingresa la desviación estandar"))
           validate(need(!is.na(input$ZTest2n1), "Ingresa el tamaño muestral"))
           validate(need(!is.na(input$ZTest2n2), "Ingresa el tamaño muestral"))
           cuantil <- Proves$cuantil
@@ -1212,7 +1215,8 @@ server <- function(input, output, session) {
         }
       }
     }
-    isolate(plotis$plot)
+    validate(need(!is.null(isolate(plotis$plot)), ""))
+    plotis$plot
   }, bg="transparent")
   
   cuantiles_Shapiro <- reactive({
@@ -1249,6 +1253,7 @@ server <- function(input, output, session) {
       #Gráficas binomiales------------------------------------------------------------------------------------------------
       #Debemos crear funciones para tener un código más limpio
       if(input$BinomialTest == 'Proporciones'){
+        validate(need(input$BinomialTestInput, ""))
         if(input$BinomialTestInput == 'Manual'){
           validate(need(input$BTtrials , "Ingresa el número de éxitos"))
           validate(need(input$BTn , "Ingresa el tamaño de la muestra"))

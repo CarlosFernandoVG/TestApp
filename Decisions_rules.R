@@ -31,33 +31,66 @@ TTestHyp <- conditionalPanel(condition = "input.ParametricTest == 'T-test'",
 #ZTest-------------------------------------------------------------------------------------------------------
 ZTestHyp <- conditionalPanel(condition = "input.ParametricTest == 'Z-test'",
                              conditionalPanel(condition = "input.ZTestKind == '1 muestra'",
-                                              conditionalPanel(condition = "input.ZTestKindOfTest1 == 'two.sided'",
-                                                               align = "center",
-                                                               "$T\\leq t_1\\ o\\ T\\geq t_2$",
-                                                               "|",
-                                                               "$|T|\\geq t$"
+                                              conditionalPanel(condition = "input.ZTest1Input == 'Datos'",
+                                                               conditionalPanel(condition = "input.ZTestKindOfTest1 == 'two.sided'",
+                                                                                align = "center",
+                                                                                "$T\\leq t_1\\ o\\ T\\geq t_2$",
+                                                                                "|",
+                                                                                "$|T|\\geq t$"
+                                                               ),
+                                                               conditionalPanel(condition = "input.ZTestKindOfTest1 == 'less'",
+                                                                                align = "center",
+                                                                                "$T\\leq t$"),
+                                                               conditionalPanel(condition = "input.ZTestKindOfTest1 == 'greater'",
+                                                                                align = "center",
+                                                                                "$T\\geq t$")
                                               ),
-                                              conditionalPanel(condition = "input.ZTestKindOfTest1 == 'less'",
-                                                               align = "center",
-                                                               "$T\\leq t$"),
-                                              conditionalPanel(condition = "input.ZTestKindOfTest1 == 'greater'",
-                                                               align = "center",
-                                                               "$T\\geq t$")
+                                              conditionalPanel(condition = "input.ZTest1Input == 'Manual'",
+                                                               conditionalPanel(condition = "input.ZTestKindOfTest1M == 'two.sided'",
+                                                                                align = "center",
+                                                                                "$T\\leq t_1\\ o\\ T\\geq t_2$",
+                                                                                "|",
+                                                                                "$|T|\\geq t$"
+                                                               ),
+                                                               conditionalPanel(condition = "input.ZTestKindOfTest1M == 'less'",
+                                                                                align = "center",
+                                                                                "$T\\leq t$"),
+                                                               conditionalPanel(condition = "input.ZTestKindOfTest1M == 'greater'",
+                                                                                align = "center",
+                                                                                "$T\\geq t$")
+                                              )
                              ),
                              conditionalPanel(condition = "input.ZTestKind == '2 muestras'",
-                                              conditionalPanel(condition = "input.ZTestKindOfTest2 == 'two.sided'",
-                                                               align = "center",
-                                                               "$T\\leq t_1\\ o\\ T\\geq t_2$",
-                                                               "|",
-                                                               "$|T|\\geq t$"
+                                              conditionalPanel(condition = "input.ZTest2Input == 'Datos'",
+                                                               conditionalPanel(condition = "input.ZTestKindOfTest2 == 'two.sided'",
+                                                                                align = "center",
+                                                                                "$T\\leq t_1\\ o\\ T\\geq t_2$",
+                                                                                "|",
+                                                                                "$|T|\\geq t$"
+                                                               ),
+                                                               conditionalPanel(condition = "input.ZTestKindOfTest2 == 'less'",
+                                                                                align = "center",
+                                                                                "$T\\leq t$"),
+                                                               conditionalPanel(condition = "input.ZTestKindOfTest2 == 'greater'",
+                                                                                align = "center",
+                                                                                "$T\\geq t$")
                                               ),
-                                              conditionalPanel(condition = "input.ZTestKindOfTest2 == 'less'",
-                                                               align = "center",
-                                                               "$T\\leq t$"),
-                                              conditionalPanel(condition = "input.ZTestKindOfTest2 == 'greater'",
-                                                               align = "center",
-                                                               "$T\\geq t$")
-                             ))
+                                              conditionalPanel(condition = "input.ZTest2Input == 'Manual'",
+                                                               conditionalPanel(condition = "input.ZTestKindOfTest2M == 'two.sided'",
+                                                                                align = "center",
+                                                                                "$T\\leq t_1\\ o\\ T\\geq t_2$",
+                                                                                "|",
+                                                                                "$|T|\\geq t$"
+                                                               ),
+                                                               conditionalPanel(condition = "input.ZTestKindOfTest2M == 'less'",
+                                                                                align = "center",
+                                                                                "$T\\leq t$"),
+                                                               conditionalPanel(condition = "input.ZTestKindOfTest2M == 'greater'",
+                                                                                align = "center",
+                                                                                "$T\\geq t$")
+                                              )
+                             )
+)
 #ShapiroTest-------------------------------------------------------------------------------------------------------
 ShapiroTestHyp <- conditionalPanel(condition = "input.ParametricTest == 'Shapiro-Wilks'",
                                    "$T<t$")
